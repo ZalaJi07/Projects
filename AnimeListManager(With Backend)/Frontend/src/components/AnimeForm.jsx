@@ -1,6 +1,11 @@
 import { useState } from "react";
+import { useSelector } from "react-redux";
 
 const AnimeForm = ({ list, handelChange, handleSearch, saveAnime, searchResults, setList }) => {
+    const animes = useSelector((state) => state.entry);
+
+    console.log(animes);
+
     return (
         <div className="input pb-4 relative">
             <input
@@ -42,7 +47,7 @@ const AnimeForm = ({ list, handelChange, handleSearch, saveAnime, searchResults,
                         onChange={handelChange}
                         name="status"
                         required
-                        defaultValue=""
+                        // defaultValue=""
                         className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E67E22] outline-none transition w-full bg-white text-gray-800 appearance-none cursor-pointer"
                     >
                         <option value="" disabled>

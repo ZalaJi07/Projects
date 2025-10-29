@@ -2,10 +2,19 @@ import './App.css'
 import Footer from './components/Footer'
 import Manager from './components/Manager'
 import Navbar from './components/Navbar'
+import { useEffect } from 'react'
 /* Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 Set-ExecutionPolicy -ExecutionPolicy Default -Scope Process */
 
+import { useDispatch } from 'react-redux'
+import { getAnimes } from './actions/entry.js'
+
 function App() {
+
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(getAnimes());
+  }, [dispatch]);
 
   return (
     <>

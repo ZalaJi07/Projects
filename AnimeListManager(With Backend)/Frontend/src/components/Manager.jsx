@@ -4,23 +4,30 @@ import ManagerHeader from "./ManagerHeader";
 import AnimeForm from "./AnimeForm";
 import AnimeTable from "./AnimeTable";
 
+import { useDispatch } from "react-redux";
+import { createAnime } from "../actions/entry";
+
 const Manager = () => {
   const [list, setList] = useState({ name: "", status: "", episodes: "", movies: "" });
   const [animeArray, setAnimeArray] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     let animes = localStorage.getItem("animes");
     if (animes) setAnimeArray(JSON.parse(animes));
   }, []);
 
-  const saveAnime = () => {
-    if (list.name && list.status && list.episodes && list.movies) {
-      const newList = [...animeArray, { ...list, id: uuidv4() }];
-      setAnimeArray(newList);
-      localStorage.setItem("animes", JSON.stringify(newList));
+  const saveAnime = (e) => {
+    e.preventDefault();
+
+    dispatch(createAnime(list));
+    // if (list.name && list.status && list.episodes && list.movies) {
+    //   const newList = [...animeArray, { ...list, id: uuidv4() }];
+    //   setAnimeArray(newList);
+    //   localStorage.setItem("animes", JSON.stringify(newList));
       setList({ name: "", status: "", episodes: "", movies: "" });
-    }
+    // }
   };
 
   const editAnime = (id) => {

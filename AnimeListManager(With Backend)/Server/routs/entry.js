@@ -1,11 +1,11 @@
 import express from "express";
 
-import { getAnime } from "../controllers/entry.js";
+import { getAnime, createAnime } from "../controllers/entry.js";
 
 const router = express.Router();
 
 router.get("/", getAnime);
 
-// router.post("/", ); 
+router.post("/", createAnime); 
 
 export default router;

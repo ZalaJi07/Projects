@@ -1,6 +1,6 @@
-import conbineReducers from 'redux';
+import { combineReducers } from 'redux';
 import entry from './entry.js';
 
-export default conbineReducers({
-    entry,
+export default combineReducers({
+  entry,
 });
