@@ -1,5 +1,7 @@
-const AnimeTable = ({ animeArray, decreaseEp, increaseEp, editAnime, deleteAnime }) => {
-  if (animeArray.length === 0)
+
+const AnimeTable = ({ animes, decreaseEp, increaseEp, editAnime, deleteAnime, setCurrentId }) => {
+
+  if (animes.length === 0)
     return <div>No List! Please add your Anime 😊</div>;
 
   return (
@@ -14,8 +16,8 @@ const AnimeTable = ({ animeArray, decreaseEp, increaseEp, editAnime, deleteAnime
         </tr>
       </thead>
       <tbody className="bg-orange-100">
-        {animeArray.map((item, index) => (
-          <tr key={index} className="hover:bg-orange-200 transition">
+        {animes.map((item) => (
+          <tr key={item._id} className="hover:bg-orange-200 transition">
             <td className="text-center border border-white py-1 break-words min-w-[18vw] max-w-[25vw]">
               {item.name}
             </td>
@@ -58,7 +60,8 @@ const AnimeTable = ({ animeArray, decreaseEp, increaseEp, editAnime, deleteAnime
               <div className="flex gap-1 justify-center">
                 <span
                   className="material-symbols-outlined text-[#ec7c19] hover:scale-110 cursor-pointer"
-                  onClick={() => editAnime(item.id)}
+                  // onClick={() => editAnime(item.id)}
+                  onClick={() => setCurrentId(item._id)}
                 >
                   edit
                 </span>

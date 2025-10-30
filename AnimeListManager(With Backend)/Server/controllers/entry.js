@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 import AnimeRow from "../models/animeRow.js";
 
 export const getAnime = async (req, res) => {
@@ -19,4 +21,21 @@ export const createAnime = async (req, res) => {
     } catch (error) {
         res.status(409).json({ message: error.message });
     }
+}
+
+export const updateAnime = async (req, res) => {
+    const { id: _id } = req.params;
+    const anime = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('No anime with that id!')
+
+    const updatedPost = await AnimeRow.findByIdAndUpdate(_id, anime, { new: true });
+
+    res.json(updatedPost);
+
+    // try {
+
+    // } catch (error) {
+    //     res.status(409).json({message: error.message})
+    // }
 }

@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 
-const AnimeForm = ({ list, handelChange, handleSearch, saveAnime, searchResults, setList }) => {
-    const animes = useSelector((state) => state.entry);
+const AnimeForm = ({ list, handelChange, handleSearch, saveAnime, searchResults, setList, currentId, setCurrentId }) => {
+    const anime = useSelector((state) => currentId ? state.entry.find((anime) => anime._id === currentId) : null);
 
-    console.log(animes);
+    useEffect(() => {
+        if (anime) setList(anime);
+    }, [anime]);
 
     return (
         <div className="input pb-4 relative">
@@ -14,6 +16,7 @@ const AnimeForm = ({ list, handelChange, handleSearch, saveAnime, searchResults,
                 type="text"
                 name="name"
                 placeholder="Anime Name"
+                autoComplete="off"
                 className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 my-3 w-full focus:ring-2 focus:ring-[#E67E22] outline-none transition"
             />
 
