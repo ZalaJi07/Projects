@@ -33,3 +33,23 @@ export const updateAnime = (id, anime) => async (dispatch) => {
         console.log(error.message);
     }
 }  
+
+export const deleteAnime = (id) => async (dispatch) => {
+    try {
+        await api.deleteAnime(id);
+
+        dispatch({ type: "DELETE", payload: id})
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
+export const increaseEp = (id) => async (dispatch) => {
+    try {
+        const { data } = await api.increaseEp(id);
+
+        dispatch({ type: "INCREASE_EP", payload: data})
+    } catch (error) {
+        console.log(error.message);
+    }
+}

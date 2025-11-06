@@ -2,7 +2,7 @@ import './App.css'
 import Footer from './components/Footer'
 import Manager from './components/Manager'
 import Navbar from './components/Navbar'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 /* Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 Set-ExecutionPolicy -ExecutionPolicy Default -Scope Process */
 
@@ -10,18 +10,23 @@ import { useDispatch } from 'react-redux'
 import { getAnimes } from './actions/entry.js'
 
 function App() {
+  
+  const [currentId, setCurrentId] = useState(null);
 
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(getAnimes());
-  }, [dispatch]);
+  }, [currentId, dispatch]);
 
   return (
     <>
       <div onContextMenu={(e) => e.preventDefault()} className="flex flex-col h-screen overflow-hidden">
         <Navbar />
         {/* <div class="absolute top-0 z-[-2] h-screen w-screen bg-[#000000] bg-[radial-gradient(#ffffff33_1px,#00091d_1px)] bg-[size:20px_20px]"></div>    */}
-        <Manager />
+        <Manager
+          currentId={currentId}
+          setCurrentId={setCurrentId}
+        />
         <Footer />
       </div>
     </>

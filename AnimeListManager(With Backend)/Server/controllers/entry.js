@@ -29,13 +29,28 @@ export const updateAnime = async (req, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('No anime with that id!')
 
-    const updatedPost = await AnimeRow.findByIdAndUpdate(_id, anime, { new: true });
+    const updatedPost = await AnimeRow.findByIdAndUpdate(_id, { ...anime, _id }, { new: true });
 
     res.json(updatedPost);
+}
 
-    // try {
+export const deleteAnime = async (req, res) => {
+    const { id: _id } = req.params;
 
-    // } catch (error) {
-    //     res.status(409).json({message: error.message})
-    // }
+    if (!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('No anime with that id!');
+
+    await AnimeRow.findByIdAndDelete(_id);
+
+    res.json({ message: 'Anime deleted successfully.' });
+}
+
+export const increaseEp = async (req, res) => {
+    const { id: _id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('No anime with that id!');
+
+    const anime = await AnimeRow.findById(_id);
+    const updatedAnime = await AnimeRow.findByIdAndUpdate(_id, { episodes: anime.episodes + 1 }, { new: true });
+
+    res.json(updatedAnime);
 }

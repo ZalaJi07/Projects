@@ -9,14 +9,13 @@ import { createAnime, updateAnime } from "../actions/entry";
 import { useSelector } from "react-redux";
 // import { set } from "mongoose";
 
-const Manager = () => {
+const Manager = ({ currentId, setCurrentId }) => {
   const animes = useSelector((state) => state.entry);
   console.log(animes);
 
   const [list, setList] = useState({ name: "", status: "", episodes: "", movies: "" });
   const [animeArray, setAnimeArray] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
-  const [currentId, setCurrentId] = useState(null);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -29,7 +28,6 @@ const Manager = () => {
 
     if (currentId) {
       dispatch(updateAnime(currentId, list));
-      // setList({ name: "", status: "", episodes: "", movies: "" });
       setCurrentId(null);
     }else{
       dispatch(createAnime(list));
@@ -110,9 +108,8 @@ const Manager = () => {
           <AnimeTable
             animes={animes}
             decreaseEp={decreaseEp}
-            increaseEp={increaseEp}
             editAnime={editAnime}
-            deleteAnime={deleteAnime}
+            deletedAnime={deleteAnime}
             setCurrentId={setCurrentId}
           />
         </div>

@@ -1,5 +1,8 @@
+import { useDispatch } from "react-redux";
+import { deleteAnime, increaseEp } from "../actions/entry.js";
 
-const AnimeTable = ({ animes, decreaseEp, increaseEp, editAnime, deleteAnime, setCurrentId }) => {
+const AnimeTable = ({ animes, decreaseEp, editAnime, deletedAnime, setCurrentId }) => {
+  const dispatch = useDispatch();
 
   if (animes.length === 0)
     return <div>No List! Please add your Anime 😊</div>;
@@ -47,7 +50,8 @@ const AnimeTable = ({ animes, decreaseEp, increaseEp, editAnime, deleteAnime, se
                 {item.episodes}
                 <span
                   className="material-symbols-outlined cursor-pointer"
-                  onClick={() => increaseEp(item.id)}
+                  onClick = {() => dispatch(increaseEp(item._id))}
+                  // onClick={() => increaseEp(item.id)}
                 >
                   add
                 </span>
@@ -67,7 +71,8 @@ const AnimeTable = ({ animes, decreaseEp, increaseEp, editAnime, deleteAnime, se
                 </span>
                 <span
                   className="material-symbols-outlined text-[#ec7c19] hover:scale-110 cursor-pointer"
-                  onClick={() => deleteAnime(item.id)}
+                  onClick={() => dispatch(deleteAnime(item._id))}
+                  // onClick={() => deleteAnime(item.id)}
                 >
                   delete
                 </span>
