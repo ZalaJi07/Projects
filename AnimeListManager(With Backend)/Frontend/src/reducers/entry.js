@@ -1,13 +1,16 @@
+import { FETCHALL, CREATE, UPDATE, DELETE, INCREASE_EP, DECREASE_EP  } from '../constants/actionTypes'
+
 export default (animes = [] , action) => {
     switch (action.type) {
-        case "FETCH_ALL":
+        case FETCHALL:
             return action.payload;
-        case "CREATE":
+        case CREATE:
             return [...animes, action.payload];
-        case "INCREASE_EP":
-        case "UPDATE":
+        case DECREASE_EP:
+        case INCREASE_EP:
+        case UPDATE:
             return animes.map((anime) => (anime._id === action.payload._id ? action.payload : anime));
-        case "DELETE":
+        case DELETE:
             return animes.filter((anime) => anime._id !== action.payload)
         default:
             return animes;

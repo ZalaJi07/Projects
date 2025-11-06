@@ -1,7 +1,7 @@
 import { useDispatch } from "react-redux";
-import { deleteAnime, increaseEp } from "../actions/entry.js";
+import { deleteAnime, increaseEp, decreaseEp } from "../actions/entry.js";
 
-const AnimeTable = ({ animes, decreaseEp, editAnime, deletedAnime, setCurrentId }) => {
+const AnimeTable = ({ animes, editAnime, deletedAnime, setCurrentId }) => {
   const dispatch = useDispatch();
 
   if (animes.length === 0)
@@ -43,7 +43,7 @@ const AnimeTable = ({ animes, decreaseEp, editAnime, deletedAnime, setCurrentId 
               <div className="flex justify-between items-center">
                 <span
                   className="material-symbols-outlined cursor-pointer"
-                  onClick={() => decreaseEp(item.id)}
+                  onClick={() => dispatch(decreaseEp(item._id))}
                 >
                   remove
                 </span>
@@ -51,7 +51,6 @@ const AnimeTable = ({ animes, decreaseEp, editAnime, deletedAnime, setCurrentId 
                 <span
                   className="material-symbols-outlined cursor-pointer"
                   onClick = {() => dispatch(increaseEp(item._id))}
-                  // onClick={() => increaseEp(item.id)}
                 >
                   add
                 </span>
@@ -64,7 +63,6 @@ const AnimeTable = ({ animes, decreaseEp, editAnime, deletedAnime, setCurrentId 
               <div className="flex gap-1 justify-center">
                 <span
                   className="material-symbols-outlined text-[#ec7c19] hover:scale-110 cursor-pointer"
-                  // onClick={() => editAnime(item.id)}
                   onClick={() => setCurrentId(item._id)}
                 >
                   edit
@@ -72,7 +70,6 @@ const AnimeTable = ({ animes, decreaseEp, editAnime, deletedAnime, setCurrentId 
                 <span
                   className="material-symbols-outlined text-[#ec7c19] hover:scale-110 cursor-pointer"
                   onClick={() => dispatch(deleteAnime(item._id))}
-                  // onClick={() => deleteAnime(item.id)}
                 >
                   delete
                 </span>

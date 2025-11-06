@@ -54,3 +54,14 @@ export const increaseEp = async (req, res) => {
 
     res.json(updatedAnime);
 }
+
+export const decreaseEp = async (req, res) => {
+    const { id: _id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('No anime with that id!');
+
+    const anime = await AnimeRow.findById(_id);
+    const updatedAnime = await AnimeRow.findByIdAndUpdate(_id, { episodes: anime.episodes - 1 }, { new: true });
+
+    res.json(updatedAnime);
+}

@@ -107,7 +107,6 @@ const Manager = ({ currentId, setCurrentId }) => {
         <div className="body overflow-y-auto max-h-[40vh] rounded-lg shadow-inner">
           <AnimeTable
             animes={animes}
-            decreaseEp={decreaseEp}
             editAnime={editAnime}
             deletedAnime={deleteAnime}
             setCurrentId={setCurrentId}
