@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node Index.js",
-    "deb": "nodemon Index.js"
+    "dev": "nodemon Index.js"
   },
   "keywords": [],
   "author": "",

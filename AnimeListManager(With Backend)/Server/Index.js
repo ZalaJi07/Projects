@@ -17,7 +17,7 @@ app.use(cors());
 app.use("/anime", entryRoutes);
 
 app.get("/", (req, res) => {
-  res.send("Anime List Manager running...");
+  res.send("Anime List Manager is running...");
 });
 
 const CONNECTION_URL = process.env.CONNECTION_URL;
