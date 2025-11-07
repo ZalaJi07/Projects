@@ -4,7 +4,8 @@
   "main": "Index.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon Index.js"
+    "start": "node Index.js",
+    "dev": "nodemon Index.js"
   },
   "keywords": [],
   "author": "",
