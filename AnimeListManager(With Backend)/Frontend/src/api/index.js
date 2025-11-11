@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const url = "http://localhost:5000/anime";
+const url = "https://anime-list-manager-server.onrender.com/anime";
 
 export const fetchAnimes = () => axios.get(url);
 export const createAnime = (newAnime) => axios.post(url, newAnime);

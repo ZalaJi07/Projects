@@ -4,13 +4,13 @@ import ManagerHeader from "./ManagerHeader";
 import AnimeForm from "./AnimeForm";
 import AnimeTable from "./AnimeTable";
 
-import { useDispatch } from "react-redux";
+import { useDispatch, shallowEqual } from "react-redux";
 import { createAnime, updateAnime } from "../actions/entry";
 import { useSelector } from "react-redux";
 // import { set } from "mongoose";
 
 const Manager = ({ currentId, setCurrentId }) => {
-  const animes = useSelector((state) => state.entry);
+  const animes = useSelector((state) => state.entry, shallowEqual);
   console.log(animes);
 
   const [list, setList] = useState({ name: "", status: "", episodes: "", movies: "" });
@@ -24,21 +24,21 @@ const Manager = ({ currentId, setCurrentId }) => {
   }, []);
 
   const saveAnime = (e) => {
-    e.preventDefault();
+    if (list.name && list.status && list.episodes && list.movies) {
+      e.preventDefault();
 
-    if (currentId) {
-      dispatch(updateAnime(currentId, list));
-      setCurrentId(null);
-    }else{
-      dispatch(createAnime(list));
+      if (currentId) {
+        dispatch(updateAnime(currentId, list));
+        setCurrentId(null);
+      } else {
+        dispatch(createAnime(list));
+      }
+      setList({ name: "", status: "", episodes: "", movies: "" });
+
+      //   const newList = [...animeArray, { ...list, id: uuidv4() }];
+      //   setAnimeArray(newList);
+      //   localStorage.setItem("animes", JSON.stringify(newList));
     }
-    setList({ name: "", status: "", episodes: "", movies: "" });
-
-    // if (list.name && list.status && list.episodes && list.movies) {
-    //   const newList = [...animeArray, { ...list, id: uuidv4() }];
-    //   setAnimeArray(newList);
-    //   localStorage.setItem("animes", JSON.stringify(newList));
-    // }
   };
 
   const editAnime = (id) => {
@@ -104,7 +104,7 @@ const Manager = ({ currentId, setCurrentId }) => {
           currentId={currentId}
           setCurrentId={setCurrentId}
         />
-        <div className="body overflow-y-auto max-h-[40vh] rounded-lg shadow-inner">
+        <div className="body overflow-y-auto max-h-[40vh]">
           <AnimeTable
             animes={animes}
             editAnime={editAnime}
