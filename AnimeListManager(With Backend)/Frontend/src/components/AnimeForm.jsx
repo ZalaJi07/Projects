@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 
-const AnimeForm = ({ list, handelChange, handleSearch, saveAnime, searchResults, setList, currentId, setCurrentId }) => {
+const AnimeForm = ({ list, handelChange, handleSearch, saveAnime, setList, currentId, setCurrentId,searchResults, searchTerm, handleSearchChange, setSearchResults }) => {
+
+    
+
+
     const anime = useSelector((state) => currentId ? state.entry.find((anime) => anime._id === currentId) : null);
 
     useEffect(() => {
@@ -12,7 +16,11 @@ const AnimeForm = ({ list, handelChange, handleSearch, saveAnime, searchResults,
         <div className="input pb-4 relative">
             <input
                 value={list.name}
-                onChange={(e) => handleSearch(e.target.value)}
+                // onChange={(e) => handleSearch(e.target.value)}
+                onChange={(e) => {
+                    handleSearchChange(e.target.value);
+                    setList({ ...list, name: e.target.value });
+                }}
                 type="text"
                 name="name"
                 placeholder="Anime Name"
@@ -22,19 +30,29 @@ const AnimeForm = ({ list, handelChange, handleSearch, saveAnime, searchResults,
 
             {/* Search Result Dropdown */}
             {searchResults.length > 0 && (
-                <ul className="absolute top-[100%] left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto z-10">
+                <ul className="absolute top-[100%] left-0 right-0 bg-[#ECF0F1] border border-gray-300 rounded-xl shadow-md max-h-64 overflow-auto z-20 backdrop-blur-sm">
                     {searchResults.map((anime, index) => (
                         <li
                             key={index}
                             onClick={() => {
-                                setList({ ...list, name: anime.title });
+                                setList({
+                                    ...list,
+                                    name: anime.title_english || anime.title,
+                                });
+                                setSearchResults([]); // close dropdown after selection
                             }}
-                            className="flex items-center gap-3 p-2 cursor-pointer hover:bg-gray-100"
+                            className="flex items-center gap-3 p-2 cursor-pointer hover:bg-[#E67E22]/10 transition-all"
                         >
-                            <img src={anime.images.jpg.image_url} alt="" className="w-10 h-14 rounded" />
-                            <div>
-                                <p className="font-semibold">{anime.title}</p>
-                                <p className="text-xs text-gray-500">
+                            <img
+                                src={anime.images.jpg.image_url}
+                                alt={anime.title_english || anime.title}
+                                className="w-10 h-14 rounded-md object-cover shadow-sm"
+                            />
+                            <div className="flex flex-col">
+                                <p className="font-semibold text-gray-800">
+                                    {anime.title_english || anime.title}
+                                </p>
+                                <p className="text-xs text-gray-600">
                                     {anime.type} • {anime.episodes || "?"} eps • ⭐ {anime.score || "N/A"}
                                 </p>
                             </div>
@@ -42,6 +60,7 @@ const AnimeForm = ({ list, handelChange, handleSearch, saveAnime, searchResults,
                     ))}
                 </ul>
             )}
+
 
             <div className="select flex flex-col md:flex-row justify-between gap-4 md:gap-0">
                 <div className="relative w-full md:w-[32%]">

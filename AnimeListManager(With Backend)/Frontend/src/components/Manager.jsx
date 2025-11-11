@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import ManagerHeader from "./ManagerHeader";
 import AnimeForm from "./AnimeForm";
@@ -11,17 +11,62 @@ import { useSelector } from "react-redux";
 
 const Manager = ({ currentId, setCurrentId }) => {
   const animes = useSelector((state) => state.entry, shallowEqual);
-  console.log(animes);
+  // console.log(animes);
 
   const [list, setList] = useState({ name: "", status: "", episodes: "", movies: "" });
   const [animeArray, setAnimeArray] = useState([]);
-  const [searchResults, setSearchResults] = useState([]);
   const dispatch = useDispatch();
 
   useEffect(() => {
     let animes = localStorage.getItem("animes");
     if (animes) setAnimeArray(JSON.parse(animes));
   }, []);
+
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debounceRef = useRef(null);
+
+  const handleSearchChange = (input) => {
+    setSearchTerm(input);
+  };
+
+  // Debounced API call
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    // only search if 2+ chars
+    if (searchTerm.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `https://api.jikan.moe/v4/anime?q=${searchTerm}&limit=10`
+        );
+
+        if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+
+        const data = await response.json();
+        if (data && data.data) {
+          // filter for better matching titles
+          const filteredResults = data.data.filter((anime) =>
+            anime.title_english
+              ? anime.title_english.toLowerCase().includes(searchTerm.toLowerCase())
+              : anime.title.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+
+          setSearchResults(filteredResults.slice(0, 10));
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setSearchResults([]);
+      }
+    }, 400); // wait 400ms after user stops typing
+
+    return () => clearTimeout(debounceRef.current);
+  }, [searchTerm]);
 
   const saveAnime = (e) => {
     if (list.name && list.status && list.episodes && list.movies) {
@@ -100,6 +145,9 @@ const Manager = ({ currentId, setCurrentId }) => {
           handleSearch={handleSearch}
           saveAnime={saveAnime}
           searchResults={searchResults}
+          searchTerm={searchTerm}
+          handleSearchChange={handleSearchChange}
+          setSearchResults={setSearchResults}
           setList={setList}
           currentId={currentId}
           setCurrentId={setCurrentId}
