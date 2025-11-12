@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 
-const AnimeForm = ({ list, handelChange, handleSearch, saveAnime, setList, currentId, setCurrentId,searchResults, searchTerm, handleSearchChange, setSearchResults }) => {
+const AnimeForm = ({ list, handelChange, saveAnime, setList, currentId, searchResults, handleSearchChange, setSearchResults }) => {
 
     
 

@@ -3,7 +3,7 @@ import { deleteAnime, increaseEp, decreaseEp } from "../actions/entry.js";
 import { useState } from "react";
 
 
-const AnimeTable = ({ animes, editAnime, deletedAnime, setCurrentId }) => {
+const AnimeTable = ({ animes, setCurrentId }) => {
   const dispatch = useDispatch();
   const [filterStatus, setFilterStatus] = useState("All");
 
