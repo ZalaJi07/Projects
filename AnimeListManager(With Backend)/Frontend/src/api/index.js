@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// const url = "https://anime-list-manager-server.onrender.com/anime";
-const API = axios.create({ baseURL: 'http://localhost:5000' });
+// const API = axios.create({ baseURL: 'https://anime-list-manager-server.onrender.com' });
+const API = axios.create({ baseURL: 'http://localhost:5000' }); // for local dev
 
 // Attach JWT token to every request
 API.interceptors.request.use((req) => {
