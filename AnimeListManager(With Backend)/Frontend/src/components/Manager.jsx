@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Navigate } from "react-router-dom";
 import ManagerHeader from "./ManagerHeader";
 import AnimeForm from "./AnimeForm";
 import AnimeTable from "./AnimeTable";
@@ -6,14 +7,26 @@ import AnimeTable from "./AnimeTable";
 import { useDispatch, shallowEqual } from "react-redux";
 import { createAnime, updateAnime } from "../actions/entry";
 import { useSelector } from "react-redux";
+
+import { getAnimes } from "../actions/entry";
 // import { set } from "mongoose";
 
-const Manager = ({ currentId, setCurrentId }) => {
+const Manager = () => {
+  const user = JSON.parse(localStorage.getItem("profile"));
+
   const animes = useSelector((state) => state.entry, shallowEqual);
   // console.log(animes);
 
   const [list, setList] = useState({ name: "", status: "", episodes: "", movies: "" });
   const dispatch = useDispatch();
+
+  const [currentId, setCurrentId] = useState(null);
+
+  useEffect(() => {
+    if (user) {
+      dispatch(getAnimes());
+    }
+  }, [currentId, dispatch]);
 
   const [searchResults, setSearchResults] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -76,6 +89,11 @@ const Manager = ({ currentId, setCurrentId }) => {
   };
 
   const handelChange = (e) => setList({ ...list, [e.target.name]: e.target.value });
+
+  // If not logged in, redirect to auth page
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
 
   return (
     <div className="flex justify-center bg-[#ECF0F1] flex-grow relative max-h-[83.6vh]">

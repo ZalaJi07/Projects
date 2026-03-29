@@ -4,3 +4,6 @@ export const UPDATE = "UPDATE";
 export const DELETE = "DELETE";
 export const INCREASE_EP = "INCREASE_EP";
 export const DECREASE_EP = "DECREASE_EP";
+
+export const AUTH = "AUTH";
+export const LOGOUT = "LOGOUT";

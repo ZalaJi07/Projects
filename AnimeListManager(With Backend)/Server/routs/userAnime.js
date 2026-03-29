@@ -1,6 +1,6 @@
 import express from "express";
 
-import { getAnime, createAnime, updateAnime, deleteAnime, increaseEp, decreaseEp } from "../controllers/entry.js";
+import { getAnime, createAnime, updateAnime, deleteAnime, increaseEp, decreaseEp } from "../controllers/userAnime.js";
 
 import auth from "../middleware/auth.js";
 

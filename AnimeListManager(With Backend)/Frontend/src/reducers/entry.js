@@ -12,6 +12,8 @@ export default (animes = [] , action) => {
             return animes.map((anime) => (anime._id === action.payload._id ? action.payload : anime));
         case DELETE:
             return animes.filter((anime) => anime._id !== action.payload)
+        case 'LOGOUT':
+            return [];
         default:
             return animes;
     }
