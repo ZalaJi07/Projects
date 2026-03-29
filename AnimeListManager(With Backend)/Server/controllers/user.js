@@ -17,7 +17,8 @@ export const signIn = async (req, res) => {
 
         const token = jwt.sign({ email: existingUser.email, id: existingUser._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
-        res.status(200).json({ result: existingUser, token });
+        const { password, ...userWithoutPassword } = existingUser._doc;
+        res.status(200).json({ result: userWithoutPassword, token });
     } catch (error) {
         res.status(500).json({ message: "Something went wrong." });
     }
@@ -57,7 +58,8 @@ export const googleSignIn = async (req, res) => {
 
         if (existingUser) {
             const token = jwt.sign({ email: existingUser.email, id: existingUser._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-            res.status(200).json({ result: existingUser, token });
+            const { password, ...userWithoutPassword } = existingUser._doc;
+            res.status(200).json({ result: userWithoutPassword, token });
         } else {
             const result = await User.create({ email, username: name, password: sub }); // Using sub as password for now, though it can be random
             const token = jwt.sign({ email: result.email, id: result._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
