@@ -5,6 +5,7 @@ const userAnimeSchema = mongoose.Schema({
     status: String,
     episodes: { type: Number, default: 0 },
     movies: { type: Number, default: 0 },
+    malId: { type: Number, default: null },
     creator: { type: String, required: true },
 }, { timestamps: true });
 

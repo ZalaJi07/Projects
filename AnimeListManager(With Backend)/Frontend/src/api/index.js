@@ -37,8 +37,13 @@ export const updateAnime = (id, updatedAnime) => API.patch(`/userAnime/${id}`, u
 export const deleteAnime = (id) => API.delete(`/userAnime/${id}`);
 export const increaseEp = (id) => API.patch(`/userAnime/${id}/increaseEp`);
 export const decreaseEp = (id) => API.patch(`/userAnime/${id}/decreaseEp`);
+export const bulkImportAnimes = (animes) => API.post("/userAnime/bulk", { animes });
 
 // Auth API
 export const signIn = (formData) => API.post("/user/signin", formData);
 export const signUp = (formData) => API.post("/user/signup", formData);
 export const googleSignIn = (token) => API.post("/user/googleSignIn", { token });
+
+// Public list API (no auth needed)
+export const fetchPublicList = (username, page = 1, limit = 20, search = '', status = '', sort = 'createdAt', order = 'desc') =>
+    API.get(`/list/${username}?page=${page}&limit=${limit}&search=${search}&status=${status}&sort=${sort}&order=${order}`);

@@ -3,10 +3,7 @@ import { useSelector } from "react-redux";
 
 const AnimeForm = ({ list, handelChange, saveAnime, setList, currentId, searchResults, handleSearchChange, setSearchResults }) => {
 
-    
-
-
-    const anime = useSelector((state) => currentId ? state.entry.find((anime) => anime._id === currentId) : null);
+    const anime = useSelector((state) => currentId ? state.entry.animes.find((anime) => anime._id === currentId) : null);
 
     useEffect(() => {
         if (anime) setList(anime);
@@ -16,10 +13,9 @@ const AnimeForm = ({ list, handelChange, saveAnime, setList, currentId, searchRe
         <div className="input pb-4 relative">
             <input
                 value={list.name}
-                // onChange={(e) => handleSearch(e.target.value)}
                 onChange={(e) => {
                     handleSearchChange(e.target.value);
-                    setList({ ...list, name: e.target.value });
+                    setList({ ...list, name: e.target.value, malId: null }); // Reset malId when typing manually
                 }}
                 type="text"
                 name="name"
@@ -38,6 +34,7 @@ const AnimeForm = ({ list, handelChange, saveAnime, setList, currentId, searchRe
                                 setList({
                                     ...list,
                                     name: anime.title_english || anime.title,
+                                    malId: anime.mal_id, // Store Jikan ID
                                 });
                                 setSearchResults([]); // close dropdown after selection
                             }}
@@ -69,7 +66,6 @@ const AnimeForm = ({ list, handelChange, saveAnime, setList, currentId, searchRe
                         onChange={handelChange}
                         name="status"
                         required
-                        // defaultValue=""
                         className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E67E22] outline-none transition w-full bg-white text-gray-800 appearance-none cursor-pointer"
                     >
                         <option value="" disabled>

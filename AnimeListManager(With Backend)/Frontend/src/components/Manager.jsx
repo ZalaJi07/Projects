@@ -7,6 +7,8 @@ import AnimeTable from "./AnimeTable";
 import { useDispatch, shallowEqual } from "react-redux";
 import { createAnime, updateAnime } from "../actions/entry";
 import { useSelector } from "react-redux";
+import toast from "react-hot-toast";
+import { bulkImportAnimes } from "../api";
 
 import { getAnimes } from "../actions/entry";
 
@@ -16,7 +18,7 @@ const Manager = () => {
   const { animes, currentPage, totalPages, totalItems } = useSelector((state) => state.entry, shallowEqual);
   const [loading, setLoading] = useState(true);
 
-  const [list, setList] = useState({ name: "", status: "", episodes: "", movies: "" });
+  const [list, setList] = useState({ name: "", status: "", episodes: "", movies: "", malId: null });
   const dispatch = useDispatch();
 
   const [currentId, setCurrentId] = useState(null);
@@ -28,6 +30,41 @@ const Manager = () => {
   const [sortField, setSortField] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
   const searchDebounceRef = useRef(null);
+
+  // Import state
+  // const [showImport, setShowImport] = useState(false);
+  // const [importing, setImporting] = useState(false);
+
+  // const handleImport = async (e) => {
+  //   const file = e.target.files[0];
+  //   if (!file) return;
+
+  //   try {
+  //     setImporting(true);
+  //     const text = await file.text();
+  //     const data = JSON.parse(text);
+
+  //     if (!Array.isArray(data)) {
+  //       toast.error("JSON file must contain an array of anime entries.");
+  //       return;
+  //     }
+
+  //     const { data: result } = await bulkImportAnimes(data);
+  //     toast.success(result.message);
+  //     setShowImport(false);
+  //     dispatch(getAnimes(1, 20, "", "", "createdAt", "desc"));
+  //     setPage(1);
+  //   } catch (error) {
+  //     if (error instanceof SyntaxError) {
+  //       toast.error("Invalid JSON file.");
+  //     } else {
+  //       toast.error(error.response?.data?.message || "Import failed.");
+  //     }
+  //   } finally {
+  //     setImporting(false);
+  //     e.target.value = ""; // reset file input
+  //   }
+  // };
 
   // Fetch animes with current filters
   useEffect(() => {
@@ -103,7 +140,7 @@ const Manager = () => {
       } else {
         dispatch(createAnime(list));
       }
-      setList({ name: "", status: "", episodes: "", movies: "" });
+      setList({ name: "", status: "", episodes: "", movies: "", malId: null });
     }
   };
 
@@ -177,33 +214,67 @@ const Manager = () => {
             <span className="material-symbols-outlined text-[#E67E22] text-xl">sort</span>
             <button
               onClick={() => toggleSort("name")}
-              className={`px-2 py-1 text-xs rounded-lg border transition ${
-                sortField === "name" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"
-              }`}
+              className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "name" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"
+                }`}
             >
               Name {sortField === "name" && (sortOrder === "asc" ? "↑" : "↓")}
             </button>
             <button
               onClick={() => toggleSort("episodes")}
-              className={`px-2 py-1 text-xs rounded-lg border transition ${
-                sortField === "episodes" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"
-              }`}
+              className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "episodes" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"
+                }`}
             >
               Episodes {sortField === "episodes" && (sortOrder === "asc" ? "↑" : "↓")}
             </button>
             <button
               onClick={() => toggleSort("createdAt")}
-              className={`px-2 py-1 text-xs rounded-lg border transition ${
-                sortField === "createdAt" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"
-              }`}
+              className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "createdAt" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"
+                }`}
             >
               Date {sortField === "createdAt" && (sortOrder === "asc" ? "↑" : "↓")}
             </button>
           </div>
 
-          {/* Item count */}
-          <span className="text-xs text-gray-500 ml-auto">{totalItems} anime</span>
+          {/* Item count + Import */}
+          {/* <div className="flex items-center gap-2 ml-auto">
+            <button
+              onClick={() => setShowImport(true)}
+              className="flex items-center gap-1 px-2 py-1 text-xs rounded-lg border border-gray-300 hover:border-[#E67E22] hover:bg-[#E67E22] hover:text-white transition"
+              title="Import anime from JSON file"
+            >
+              <span className="material-symbols-outlined text-sm">upload_file</span>
+              Import
+            </button>
+            <span className="text-xs text-gray-500">{totalItems} anime</span>
+          </div> */}
         </div>
+
+        {/* Import Modal */}
+        {/* {showImport && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowImport(false)}>
+            <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-5" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-bold text-gray-800">Import Anime List</h3>
+                <span className="material-symbols-outlined cursor-pointer text-gray-400 hover:text-gray-600" onClick={() => setShowImport(false)}>close</span>
+              </div>
+              <p className="text-sm text-gray-600 mb-3">Upload a JSON file with your anime list. Required format:</p>
+              <pre className="bg-gray-100 rounded-lg p-3 text-xs mb-3 overflow-auto max-h-32">{`[\n  { "name": "Naruto", "status": "Finished", "episodes": 220, "movies": 3 },\n  { "name": "One Piece", "status": "Watching", "episodes": 100, "movies": 0 }\n]`}</pre>
+              <p className="text-xs text-gray-400 mb-3">Valid statuses: Finished, CaughtUp, Watching, OnHold, Pending, Dropped</p>
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImport}
+                className="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#E67E22] file:text-white file:font-semibold file:cursor-pointer hover:file:opacity-90"
+              />
+              {importing && (
+                <div className="flex items-center gap-2 mt-3 text-sm text-gray-500">
+                  <div className="w-4 h-4 border-2 border-[#E67E22] border-t-transparent rounded-full animate-spin"></div>
+                  Importing...
+                </div>
+              )}
+            </div>
+          </div>
+        )} */}
 
         {/* Table area */}
         <div className="body overflow-y-auto max-h-[35vh]">

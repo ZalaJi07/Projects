@@ -9,6 +9,9 @@ const Navbar = () => {
   const dispatch = useDispatch()
   const [user, setUser] = useState(JSON.parse(localStorage.getItem("profile"))?.result?.username);
 
+  // Hide personal controls when viewing someone else's public list
+  const isPublicListView = location.pathname.startsWith("/list/");
+
   useEffect(() => {
     setUser(JSON.parse(localStorage.getItem("profile"))?.result?.username);
   }, [location]);
@@ -20,14 +23,43 @@ const Navbar = () => {
     setUser(null)
   }
 
+  const shareList = () => {
+    const url = `${window.location.origin}/list/${user}`;
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success("Share link copied to clipboard!");
+    }).catch(() => {
+      toast("Your public list: " + url, { duration: 5000 });
+    });
+  }
+
   return (
     <div className="bg-[#2C3E50] px-6 py-2 shadow-md flex items-center justify-between">
 
       {/* Logo */}
-      <img src="/logo.png" alt="logo" className="h-12" />
+      <img src="/logo.png" alt="logo" className="h-12 cursor-pointer" onClick={() => navigate("/")} />
 
       {/* Right Side */}
-      {(user) ? (
+      {isPublicListView ? (
+        // On public list view: show only a "Back" or "Login/Home" button
+        <div className="flex items-center gap-3 text-white">
+          {user ? (
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-1 bg-[#E67E22] px-4 py-1.5 rounded-full text-white font-semibold hover:opacity-90 transition"
+            >
+              <span className="material-symbols-outlined text-base">arrow_back</span>
+              My List
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate("/auth")}
+              className="bg-[#E67E22] px-4 py-1.5 rounded-full text-white font-semibold hover:opacity-90 transition"
+            >
+              Login
+            </button>
+          )}
+        </div>
+      ) : user ? (
         <div className="flex items-center gap-3 text-white">
           {/* Avatar */}
           <div className="w-9 h-9 rounded-full bg-[#E67E22] flex items-center justify-center font-bold uppercase">
@@ -36,6 +68,16 @@ const Navbar = () => {
 
           {/* Name */}
           <span className="font-medium">{user}</span>
+
+          {/* Share Button */}
+          <button
+            onClick={shareList}
+            className="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full text-white text-sm font-medium hover:bg-white/20 transition"
+            title="Copy share link"
+          >
+            <span className="material-symbols-outlined text-base">share</span>
+            Share
+          </button>
 
           <button
             onClick={logout}
@@ -57,17 +99,3 @@ const Navbar = () => {
 }
 
 export default Navbar
-
-
-
-// import React from 'react'
-
-// const Navbar = () => {
-//     return (
-//         <div className="bg-[#2C3E50] px-6 py-2 shadow-md flex items-center justify-center md:justify-start">
-//                 <img src="/logo.png" alt="logo" className="h-12" />
-//         </div>
-//     )
-// }
-
-// export default Navbar

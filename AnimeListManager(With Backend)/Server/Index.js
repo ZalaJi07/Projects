@@ -7,6 +7,7 @@ import bodyParser from "body-parser";
 import entryRoutes from "./routs/entry.js";
 import userRoutes from "./routs/users.js";
 import userAnimeRoutes from "./routs/userAnime.js";
+import publicListRoutes from "./routs/publicList.js";
 
 const app = express();
 dotenv.config();
@@ -19,6 +20,7 @@ app.use(cors());
 app.use("/anime", entryRoutes);
 app.use("/user", userRoutes);
 app.use("/userAnime", userAnimeRoutes);
+app.use("/list", publicListRoutes);
 
 app.get("/", (req, res) => {
   res.send("Anime List Manager is running...");
