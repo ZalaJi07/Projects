@@ -5,8 +5,29 @@ export const getAnime = async (req, res) => {
     try {
         if (!req.userId) return res.status(401).json({ message: "Unauthenticated" });
 
-        const animeRows = await UserAnime.find({ creator: req.userId });
-        res.status(200).json(animeRows);
+        const { page = 1, limit = 20, search = '', status = '', sort = 'createdAt', order = 'desc' } = req.query;
+
+        // Build filter
+        const filter = { creator: req.userId };
+        if (search) filter.name = { $regex: search, $options: 'i' }; // case-insensitive search
+        if (status && status !== 'All') filter.status = status;
+
+        // Sort config
+        const sortOrder = order === 'asc' ? 1 : -1;
+        const sortConfig = { [sort]: sortOrder };
+
+        const total = await UserAnime.countDocuments(filter);
+        const animeRows = await UserAnime.find(filter)
+            .sort(sortConfig)
+            .skip((parseInt(page) - 1) * parseInt(limit))
+            .limit(parseInt(limit));
+
+        res.status(200).json({
+            data: animeRows,
+            currentPage: parseInt(page),
+            totalPages: Math.ceil(total / parseInt(limit)),
+            totalItems: total,
+        });
     } catch (error) {
         res.status(404).json({ message: error.message });
     }

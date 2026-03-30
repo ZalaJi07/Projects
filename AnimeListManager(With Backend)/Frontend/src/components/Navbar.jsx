@@ -1,16 +1,13 @@
 import { useNavigate, useLocation } from "react-router-dom"
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux"
-import { use } from "react";
+import toast from "react-hot-toast";
 
 const Navbar = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const dispatch = useDispatch()
   const [user, setUser] = useState(JSON.parse(localStorage.getItem("profile"))?.result?.username);
-  // const user = null; // TODO: get user from global state or context
-
-  console.log("Navbar User:", user)
 
   useEffect(() => {
     setUser(JSON.parse(localStorage.getItem("profile"))?.result?.username);
@@ -18,7 +15,7 @@ const Navbar = () => {
 
   const logout = () => {
     dispatch({ type: "LOGOUT" })
-    // localStorage.removeItem("profile")   // clear auth data
+    toast.success("Logged out successfully.");
     navigate("/")
     setUser(null)
   }

@@ -1,122 +1,85 @@
 import { useDispatch } from "react-redux";
 import { deleteAnime, increaseEp, decreaseEp } from "../actions/entry.js";
-import { useState } from "react";
 
 
 const AnimeTable = ({ animes, setCurrentId }) => {
   const dispatch = useDispatch();
-  const [filterStatus, setFilterStatus] = useState("All");
-
-  const filteredAnimes = animes.filter((anime) => {
-    if (filterStatus === "All") return true;
-    return anime.status === filterStatus;
-  });
-
-  if (animes.length === 0)
-    return <div>No List! Please add your Anime 😊</div>;
 
   return (
-    <>
-      <div className="flex items-center gap-2 my-1">
-        <span className="material-symbols-outlined text-[#E67E22]">filter_alt</span>
-        <label
-          htmlFor="statusFilter"
-          className="text-sm font-semibold text-gray-700"
-        >
-          Filter by Status:
-        </label>
-
-        <select
-          id="statusFilter"
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="border border-gray-300 bg-[#ECF0F1] rounded-lg px-3 py-2 text-sm text-gray-800 
-                 shadow-sm hover:border-[#E67E22] focus:outline-none focus:ring-2 
-                 focus:ring-[#E67E22] focus:bg-[#FDFBF9] transition"
-        >
-          <option value="All">All</option>
-          <option value="Finished">Finished</option>
-          <option value="CaughtUp">CaughtUp</option>
-          <option value="Watching">On Watching</option>
-          <option value="OnHold">OnHold</option>
-          <option value="Pending">Pending</option>
-          <option value="Dropped">Dropped</option>
-          {/* <option value="Plan to Watch">Plan to Watch</option> */}
-        </select>
-      </div>
-
-
-      <table className="table-auto w-full shadow-lg rounded-lg overflow-hidden mb-8">
-        <thead className="bg-[#E67E22] text-white">
-          <tr>
-            <th className="border border-white p-2">NAME</th>
-            <th className="border border-white p-2">STATUS</th>
-            <th className="border border-white p-2">EPISODE</th>
-            <th className="border border-white p-2">MOVIE</th>
-            <th className="border border-white p-2">ACTION</th>
-          </tr>
-        </thead>
-        <tbody className="bg-orange-100">
-          {filteredAnimes.map((item) => (
-            <tr key={item._id} className="hover:bg-orange-200 transition">
-              <td className="text-center border border-white py-1 break-words min-w-[18vw] max-w-[25vw]">
-                {item.name}
-              </td>
-              <td className="text-center border border-white py-1">
+    <table className="table-auto w-full shadow-lg rounded-lg overflow-hidden mb-2">
+      <thead className="bg-[#E67E22] text-white">
+        <tr>
+          <th className="border border-white p-2">NAME</th>
+          <th className="border border-white p-2">STATUS</th>
+          <th className="border border-white p-2">EPISODE</th>
+          <th className="border border-white p-2">MOVIE</th>
+          <th className="border border-white p-2">ACTION</th>
+        </tr>
+      </thead>
+      <tbody className="bg-orange-100">
+        {animes.map((item) => (
+          <tr key={item._id} className="hover:bg-orange-200 transition">
+            <td className="text-center border border-white py-1 break-words min-w-[18vw] max-w-[25vw]">
+              {item.name}
+            </td>
+            <td className="text-center border border-white py-1">
+              <span
+                className={`px-2 py-1 text-xs rounded-full font-semibold ${item.status === "Finished"
+                  ? "bg-green-100 text-green-600"
+                  : item.status === "Watching"
+                    ? "bg-blue-100 text-blue-600"
+                    : item.status === "Dropped"
+                      ? "bg-red-100 text-red-600"
+                      : item.status === "CaughtUp"
+                        ? "bg-purple-100 text-purple-600"
+                        : item.status === "OnHold"
+                          ? "bg-yellow-100 text-yellow-600"
+                          : "bg-gray-100 text-gray-600"
+                  }`}
+              >
+                {item.status}
+              </span>
+            </td>
+            <td className="text-center border border-white py-1 break-words px-2">
+              <div className="flex justify-between items-center">
                 <span
-                  className={`px-2 py-1 text-xs rounded-full font-semibold ${item.status === "Finished"
-                    ? "bg-green-100 text-green-600"
-                    : item.status === "Watching"
-                      ? "bg-blue-100 text-blue-600"
-                      : item.status === "Dropped"
-                        ? "bg-red-100 text-red-600"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
+                  className="material-symbols-outlined cursor-pointer"
+                  onClick={() => dispatch(decreaseEp(item._id))}
                 >
-                  {item.status}
+                  remove
                 </span>
-              </td>
-              <td className="text-center border border-white py-1 break-words px-2">
-                <div className="flex justify-between items-center">
-                  <span
-                    className="material-symbols-outlined cursor-pointer"
-                    onClick={() => dispatch(decreaseEp(item._id))}
-                  >
-                    remove
-                  </span>
-                  {item.episodes}
-                  <span
-                    className="material-symbols-outlined cursor-pointer"
-                    onClick={() => dispatch(increaseEp(item._id))}
-                  >
-                    add
-                  </span>
-                </div>
-              </td>
-              <td className="text-center border border-white py-1 break-words">
-                {item.movies}
-              </td>
-              <td className="text-center border py-1 px-2">
-                <div className="flex gap-1 justify-center">
-                  <span
-                    className="material-symbols-outlined text-[#ec7c19] hover:scale-110 cursor-pointer"
-                    onClick={() => setCurrentId(item._id)}
-                  >
-                    edit
-                  </span>
-                  <span
-                    className="material-symbols-outlined text-[#ec7c19] hover:scale-110 cursor-pointer"
-                    onClick={() => dispatch(deleteAnime(item._id))}
-                  >
-                    delete
-                  </span>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </>
+                {item.episodes}
+                <span
+                  className="material-symbols-outlined cursor-pointer"
+                  onClick={() => dispatch(increaseEp(item._id))}
+                >
+                  add
+                </span>
+              </div>
+            </td>
+            <td className="text-center border border-white py-1 break-words">
+              {item.movies}
+            </td>
+            <td className="text-center border py-1 px-2">
+              <div className="flex gap-1 justify-center">
+                <span
+                  className="material-symbols-outlined text-[#ec7c19] hover:scale-110 cursor-pointer"
+                  onClick={() => setCurrentId(item._id)}
+                >
+                  edit
+                </span>
+                <span
+                  className="material-symbols-outlined text-[#ec7c19] hover:scale-110 cursor-pointer"
+                  onClick={() => dispatch(deleteAnime(item._id))}
+                >
+                  delete
+                </span>
+              </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 };
 

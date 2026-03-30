@@ -1,7 +1,8 @@
 import axios from "axios";
+import toast from "react-hot-toast";
 
-// const API = axios.create({ baseURL: 'https://anime-list-manager-server.onrender.com' });
-const API = axios.create({ baseURL: 'http://localhost:5000' }); // for local dev
+
+const API = axios.create({ baseURL: import.meta.env.VITE_API_URL });
 
 // Attach JWT token to every request
 API.interceptors.request.use((req) => {
@@ -13,8 +14,24 @@ API.interceptors.request.use((req) => {
     return req;
 });
 
-// Anime API (per-user, authenticated)
-export const fetchAnimes = () => API.get("/userAnime");
+// Auto-logout on 401 (expired/invalid token)
+API.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('profile');
+            toast.error("Session expired. Please log in again.", { id: "session-expired" });
+            setTimeout(() => {
+                window.location.href = '/auth';
+            }, 1500);
+        }
+        return Promise.reject(error);
+    }
+);
+
+// Anime API (per-user, authenticated, with pagination/search/filter/sort)
+export const fetchAnimes = (page = 1, limit = 20, search = '', status = '', sort = 'createdAt', order = 'desc') =>
+    API.get(`/userAnime?page=${page}&limit=${limit}&search=${search}&status=${status}&sort=${sort}&order=${order}`);
 export const createAnime = (newAnime) => API.post("/userAnime", newAnime);
 export const updateAnime = (id, updatedAnime) => API.patch(`/userAnime/${id}`, updatedAnime);
 export const deleteAnime = (id) => API.delete(`/userAnime/${id}`);

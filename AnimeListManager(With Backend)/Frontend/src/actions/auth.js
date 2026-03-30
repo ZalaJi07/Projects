@@ -1,5 +1,6 @@
 import { AUTH } from "../constants/actionTypes";
 import * as api from "../api";
+import toast from "react-hot-toast";
 
 // SIGN IN
 export const signIn = (formData, navigate) => async (dispatch) => {
@@ -7,9 +8,10 @@ export const signIn = (formData, navigate) => async (dispatch) => {
     const { data } = await api.signIn(formData);
 
     dispatch({ type: AUTH, data });
+    toast.success(`Welcome back, ${data.result.username || data.result.email}!`);
     navigate("/");
   } catch (error) {
-    console.log(error.response?.data?.message || error.message);
+    toast.error(error.response?.data?.message || "Sign in failed. Please try again.");
   }
 };
 
@@ -19,19 +21,21 @@ export const signUp = (formData, navigate) => async (dispatch) => {
     const { data } = await api.signUp(formData);
 
     dispatch({ type: AUTH, data });
+    toast.success("Account created successfully! Welcome!");
     navigate("/");
   } catch (error) {
-    console.log(error.response?.data?.message || error.message);
+    toast.error(error.response?.data?.message || "Sign up failed. Please try again.");
   }
 };
 
 export const googleSignIn = (token, navigate) => async (dispatch) => {
   try {
-    const { data } = await api.googleSignIn(token); // Pass token directly since API usage in index.js expects just token? Wait, index.js says `googleSignIn = (token) => API.post("/user/googleSignIn", token);`
+    const { data } = await api.googleSignIn(token);
 
     dispatch({ type: AUTH, data });
+    toast.success(`Welcome, ${data.result.username || data.result.email}!`);
     navigate("/");
   } catch (error) {
-    console.log(error.response?.data?.message || error.message);
+    toast.error(error.response?.data?.message || "Google sign in failed.");
   }
 };
