@@ -1,6 +1,6 @@
 import express from "express";
 
-import { getAnime, createAnime, bulkImport, updateAnime, deleteAnime, increaseEp, decreaseEp } from "../controllers/userAnime.js";
+import { getAnime, createAnime, updateAnime, deleteAnime, increaseEp, decreaseEp } from "../controllers/userAnime.js";
 
 import auth from "../middleware/auth.js";
 import { apiLimiter } from "../middleware/rateLimiter.js";
@@ -10,7 +10,6 @@ const router = express.Router();
 
 router.get("/", auth, getAnime);
 router.post("/", auth, apiLimiter, animeRules, validate, createAnime); 
-router.post("/bulk", auth, bulkImport);
 router.patch("/:id", auth, apiLimiter, animeRules, validate, updateAnime);
 router.delete("/:id", auth, apiLimiter, deleteAnime);
 router.patch("/:id/increaseEp", auth, apiLimiter, increaseEp);

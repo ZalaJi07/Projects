@@ -47,30 +47,6 @@ export const createAnime = async (req, res) => {
     }
 }
 
-export const bulkImport = async (req, res) => {
-    const { animes } = req.body;
-
-    if (!req.userId) return res.status(401).json({ message: "Unauthenticated" });
-    if (!Array.isArray(animes) || animes.length === 0) return res.status(400).json({ message: "Please provide an array of anime entries." });
-    if (animes.length > 200) return res.status(400).json({ message: "Maximum 200 entries per import." });
-
-    try {
-        const entries = animes.map((a) => ({
-            name: a.name,
-            status: a.status || "Pending",
-            episodes: parseInt(a.episodes) || 0,
-            movies: parseInt(a.movies) || 0,
-            malId: a.malId || null,
-            creator: req.userId,
-        }));
-
-        const result = await UserAnime.insertMany(entries);
-        res.status(201).json({ message: `Successfully imported ${result.length} anime.`, count: result.length });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-}
-
 export const updateAnime = async (req, res) => {
     const { id: _id } = req.params;
     const anime = req.body;

@@ -6,6 +6,7 @@ import Manager from './components/Manager'
 import Navbar from './components/Navbar'
 import Auth from './components/auth/auth.jsx'
 import PublicList from './components/PublicList'
+import ServerWakeUp from './components/ServerWakeUp'
 
 function App() {
 
@@ -29,15 +30,17 @@ function App() {
           },
         }}
       />
-      <div onContextMenu={(e) => e.preventDefault()} className="flex flex-col h-screen overflow-hidden">
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Manager />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/list/:username" element={<PublicList />} />
-        </Routes>
-        <Footer />
-      </div>
+      <ServerWakeUp>
+        <div onContextMenu={(e) => e.preventDefault()} className="flex flex-col h-screen overflow-hidden">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Manager />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/list/:username" element={<PublicList />} />
+          </Routes>
+          <Footer />
+        </div>
+      </ServerWakeUp>
     </>
   )
 }

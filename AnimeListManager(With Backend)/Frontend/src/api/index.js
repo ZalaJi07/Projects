@@ -37,7 +37,6 @@ export const updateAnime = (id, updatedAnime) => API.patch(`/userAnime/${id}`, u
 export const deleteAnime = (id) => API.delete(`/userAnime/${id}`);
 export const increaseEp = (id) => API.patch(`/userAnime/${id}/increaseEp`);
 export const decreaseEp = (id) => API.patch(`/userAnime/${id}/decreaseEp`);
-export const bulkImportAnimes = (animes) => API.post("/userAnime/bulk", { animes });
 
 // Auth API
 export const signIn = (formData) => API.post("/user/signin", formData);
