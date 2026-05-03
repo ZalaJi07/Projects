@@ -30,8 +30,8 @@ API.interceptors.response.use(
 );
 
 // Anime API (per-user, authenticated, with pagination/search/filter/sort)
-export const fetchAnimes = (page = 1, limit = 20, search = '', status = '', sort = 'createdAt', order = 'desc') =>
-    API.get(`/userAnime?page=${page}&limit=${limit}&search=${search}&status=${status}&sort=${sort}&order=${order}`);
+export const fetchAnimes = (page = 1, limit = 20, search = '', status = '', sort = 'createdAt', order = 'desc', entryType = 'series') =>
+    API.get(`/userAnime?page=${page}&limit=${limit}&search=${search}&status=${status}&sort=${sort}&order=${order}&entryType=${entryType}`);
 export const createAnime = (newAnime) => API.post("/userAnime", newAnime);
 export const updateAnime = (id, updatedAnime) => API.patch(`/userAnime/${id}`, updatedAnime);
 export const deleteAnime = (id) => API.delete(`/userAnime/${id}`);
@@ -44,5 +44,5 @@ export const signUp = (formData) => API.post("/user/signup", formData);
 export const googleSignIn = (token) => API.post("/user/googleSignIn", { token });
 
 // Public list API (no auth needed)
-export const fetchPublicList = (username, page = 1, limit = 20, search = '', status = '', sort = 'createdAt', order = 'desc') =>
-    API.get(`/list/${username}?page=${page}&limit=${limit}&search=${search}&status=${status}&sort=${sort}&order=${order}`);
+export const fetchPublicList = (username, page = 1, limit = 20, search = '', status = '', sort = 'createdAt', order = 'desc', entryType = 'series') =>
+    API.get(`/list/${username}?page=${page}&limit=${limit}&search=${search}&status=${status}&sort=${sort}&order=${order}&entryType=${entryType}`);

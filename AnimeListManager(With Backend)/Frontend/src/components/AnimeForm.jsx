@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 
-const AnimeForm = ({ list, handelChange, saveAnime, setList, currentId, searchResults, handleSearchChange, setSearchResults }) => {
+const AnimeForm = ({ list, handelChange, saveAnime, setList, currentId, searchResults, handleSearchChange, setSearchResults, activeTab = "series" }) => {
 
     const anime = useSelector((state) => currentId ? state.entry.animes.find((anime) => anime._id === currentId) : null);
 
@@ -9,17 +9,19 @@ const AnimeForm = ({ list, handelChange, saveAnime, setList, currentId, searchRe
         if (anime) setList(anime);
     }, [anime]);
 
+    const isMovie = activeTab === "movie";
+
     return (
         <div className="input pb-4 relative">
             <input
                 value={list.name}
                 onChange={(e) => {
                     handleSearchChange(e.target.value);
-                    setList({ ...list, name: e.target.value, malId: null }); // Reset malId when typing manually
+                    setList({ ...list, name: e.target.value, malId: null });
                 }}
                 type="text"
                 name="name"
-                placeholder="Anime Name"
+                placeholder={isMovie ? "Movie Name" : "Anime Name"}
                 autoComplete="off"
                 className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 my-3 w-full focus:ring-2 focus:ring-[#E67E22] outline-none transition"
             />
@@ -34,9 +36,9 @@ const AnimeForm = ({ list, handelChange, saveAnime, setList, currentId, searchRe
                                 setList({
                                     ...list,
                                     name: anime.title_english || anime.title,
-                                    malId: anime.mal_id, // Store Jikan ID
+                                    malId: anime.mal_id,
                                 });
-                                setSearchResults([]); // close dropdown after selection
+                                setSearchResults([]);
                             }}
                             className="flex items-center gap-3 p-2 cursor-pointer hover:bg-[#E67E22]/10 transition-all"
                         >
@@ -58,52 +60,53 @@ const AnimeForm = ({ list, handelChange, saveAnime, setList, currentId, searchRe
                 </ul>
             )}
 
+            {/* Series fields — hidden for movies */}
+            {!isMovie && (
+                <div className="select flex flex-col md:flex-row justify-between gap-4 md:gap-0">
+                    <div className="relative w-full md:w-[32%]">
+                        <select
+                            value={list.status}
+                            onChange={handelChange}
+                            name="status"
+                            required
+                            className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E67E22] outline-none transition w-full bg-white text-gray-800 appearance-none cursor-pointer"
+                        >
+                            <option value="" disabled>
+                                Status
+                            </option>
+                            <option value="Finished">Finished</option>
+                            <option value="CaughtUp">CaughtUp</option>
+                            <option value="Watching">Watching</option>
+                            <option value="OnHold">OnHold</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Dropped">Dropped</option>
+                        </select>
+                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 material-symbols-outlined pointer-events-none">
+                            expand_more
+                        </span>
+                    </div>
 
-            <div className="select flex flex-col md:flex-row justify-between gap-4 md:gap-0">
-                <div className="relative w-full md:w-[32%]">
-                    <select
-                        value={list.status}
+                    <input
+                        value={list.episodes}
                         onChange={handelChange}
-                        name="status"
-                        required
-                        className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E67E22] outline-none transition w-full bg-white text-gray-800 appearance-none cursor-pointer"
-                    >
-                        <option value="" disabled>
-                            Status
-                        </option>
-                        <option value="Finished">Finished</option>
-                        <option value="CaughtUp">CaughtUp</option>
-                        <option value="Watching">Watching</option>
-                        <option value="OnHold">OnHold</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Dropped">Dropped</option>
-                    </select>
-                    <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 material-symbols-outlined pointer-events-none">
-                        expand_more
-                    </span>
+                        type="number"
+                        name="episodes"
+                        placeholder="Episodes"
+                        className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E67E22] outline-none transition w-full md:w-[32%]"
+                        autoComplete="off"
+                    />
+
+                    <input
+                        value={list.movies}
+                        onChange={handelChange}
+                        type="number"
+                        name="movies"
+                        placeholder="Movies"
+                        className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E67E22] outline-none transition w-full md:w-[32%]"
+                        autoComplete="off"
+                    />
                 </div>
-
-
-                <input
-                    value={list.episodes}
-                    onChange={handelChange}
-                    type="number"
-                    name="episodes"
-                    placeholder="Episodes"
-                    className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E67E22] outline-none transition w-full md:w-[32%]"
-                    autoComplete="off"
-                />
-
-                <input
-                    value={list.movies}
-                    onChange={handelChange}
-                    type="number"
-                    name="movies"
-                    placeholder="Movies"
-                    className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E67E22] outline-none transition w-full md:w-[32%]"
-                    autoComplete="off"
-                />
-            </div>
+            )}
 
             <button
                 onClick={saveAnime}

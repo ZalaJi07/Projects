@@ -15,12 +15,13 @@ const PublicList = () => {
     const [filterStatus, setFilterStatus] = useState("All");
     const [sortField, setSortField] = useState("createdAt");
     const [sortOrder, setSortOrder] = useState("desc");
+    const [activeTab, setActiveTab] = useState("series");
     const searchDebounceRef = useRef(null);
 
     useEffect(() => {
         setLoading(true);
         setError(null);
-        fetchPublicList(username, page, 20, listSearch, filterStatus === "All" ? "" : filterStatus, sortField, sortOrder)
+        fetchPublicList(username, page, 20, listSearch, filterStatus === "All" ? "" : filterStatus, sortField, sortOrder, activeTab)
             .then(({ data }) => {
                 setAnimes(data.data);
                 setTotalPages(data.totalPages);
@@ -31,11 +32,16 @@ const PublicList = () => {
                 setError(err.response?.data?.message || "Failed to load list.");
                 setLoading(false);
             });
-    }, [username, page, listSearch, filterStatus, sortField, sortOrder]);
+    }, [username, page, listSearch, filterStatus, sortField, sortOrder, activeTab]);
 
     useEffect(() => {
         setPage(1);
-    }, [listSearch, filterStatus, sortField, sortOrder]);
+    }, [listSearch, filterStatus, sortField, sortOrder, activeTab]);
+
+    // Reset filter when switching tabs
+    useEffect(() => {
+        setFilterStatus("All");
+    }, [activeTab]);
 
     const handleListSearchChange = (e) => {
         if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
@@ -54,6 +60,8 @@ const PublicList = () => {
         }
     };
 
+    const isMovie = activeTab === "movie";
+
     if (error) {
         return (
             <div className="flex flex-grow items-center justify-center bg-[#ECF0F1]">
@@ -67,8 +75,8 @@ const PublicList = () => {
     }
 
     return (
-        <div className="flex justify-center bg-[#ECF0F1] flex-grow relative max-h-[83.6vh]">
-            <div className="w-[90vw] md:w-[60vw]">
+        <div className="flex justify-center bg-[#ECF0F1] flex-grow overflow-auto">
+            <div className="w-[95vw] md:w-[60vw] flex flex-col py-2 px-1 sm:px-0">
                 {/* Header */}
                 <div className="flex items-center justify-between py-3">
                     <div className="flex items-center gap-3">
@@ -76,56 +84,91 @@ const PublicList = () => {
                             {username[0]}
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-gray-800">{username}'s Anime List</h2>
-                            <p className="text-xs text-gray-500">{totalItems} anime</p>
+                            <h2 className="text-lg font-bold text-gray-800">{username}'s List</h2>
+                            <p className="text-xs text-gray-500">
+                                {totalItems} {isMovie ? "movie" : "anime"}{totalItems !== 1 ? "s" : ""}
+                            </p>
                         </div>
                     </div>
                     <span className="px-3 py-1 bg-gray-200 text-gray-600 text-xs rounded-full font-medium">Read Only</span>
                 </div>
 
+                {/* Tab Toggle */}
+                <div className="flex rounded-lg overflow-hidden border border-gray-300 mb-3 self-center">
+                    <button
+                        onClick={() => setActiveTab("series")}
+                        className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${
+                            activeTab === "series" ? "bg-[#E67E22] text-white" : "bg-white text-gray-600 hover:bg-orange-50"
+                        }`}
+                    >
+                        Series
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("movie")}
+                        className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${
+                            activeTab === "movie" ? "bg-[#E67E22] text-white" : "bg-white text-gray-600 hover:bg-orange-50"
+                        }`}
+                    >
+                        Movies
+                    </button>
+                </div>
+
                 {/* Search, Filter & Sort */}
                 <div className="flex flex-wrap items-center gap-2 my-2">
-                    <div className="flex items-center gap-1 flex-1 min-w-[150px]">
+                    <div className="flex items-center gap-1 w-full sm:flex-1 sm:min-w-[150px]">
                         <span className="material-symbols-outlined text-[#E67E22] text-xl">search</span>
                         <input
                             type="text"
-                            placeholder="Search this list..."
+                            placeholder={isMovie ? "Search movies..." : "Search this list..."}
                             onChange={handleListSearchChange}
                             className="border border-gray-300 bg-white rounded-lg px-3 py-1.5 text-sm w-full shadow-sm hover:border-[#E67E22] focus:outline-none focus:ring-2 focus:ring-[#E67E22] transition"
                         />
                     </div>
-                    <div className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[#E67E22] text-xl">filter_alt</span>
-                        <select
-                            value={filterStatus}
-                            onChange={(e) => setFilterStatus(e.target.value)}
-                            className="border border-gray-300 bg-white rounded-lg px-3 py-1.5 text-sm shadow-sm hover:border-[#E67E22] focus:outline-none focus:ring-2 focus:ring-[#E67E22] transition"
-                        >
-                            <option value="All">All</option>
-                            <option value="Finished">Finished</option>
-                            <option value="CaughtUp">CaughtUp</option>
-                            <option value="Watching">Watching</option>
-                            <option value="OnHold">OnHold</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Dropped">Dropped</option>
-                        </select>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[#E67E22] text-xl">sort</span>
-                        {["name", "episodes", "createdAt"].map((field) => (
-                            <button
-                                key={field}
-                                onClick={() => toggleSort(field)}
-                                className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === field ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"}`}
+                    {!isMovie && (
+                        <div className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[#E67E22] text-xl">filter_alt</span>
+                            <select
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                                className="border border-gray-300 bg-white rounded-lg px-2 sm:px-3 py-1.5 text-sm shadow-sm hover:border-[#E67E22] focus:outline-none focus:ring-2 focus:ring-[#E67E22] transition"
                             >
-                                {field === "createdAt" ? "Date" : field.charAt(0).toUpperCase() + field.slice(1)} {sortField === field && (sortOrder === "asc" ? "↑" : "↓")}
+                                <option value="All">All</option>
+                                <option value="Finished">Finished</option>
+                                <option value="CaughtUp">CaughtUp</option>
+                                <option value="Watching">Watching</option>
+                                <option value="OnHold">OnHold</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Dropped">Dropped</option>
+                            </select>
+                        </div>
+                    )}
+                    <div className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[#E67E22] text-xl hidden sm:inline">sort</span>
+                        <button
+                            onClick={() => toggleSort("name")}
+                            className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "name" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"}`}
+                        >
+                            Name {sortField === "name" && (sortOrder === "asc" ? "↑" : "↓")}
+                        </button>
+                        {!isMovie && (
+                            <button
+                                onClick={() => toggleSort("episodes")}
+                                className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "episodes" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"}`}
+                            >
+                                Ep {sortField === "episodes" && (sortOrder === "asc" ? "↑" : "↓")}
                             </button>
-                        ))}
+                        )}
+                        <button
+                            onClick={() => toggleSort("createdAt")}
+                            className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "createdAt" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"}`}
+                        >
+                            Date {sortField === "createdAt" && (sortOrder === "asc" ? "↑" : "↓")}
+                        </button>
                     </div>
                 </div>
 
-                {/* Table — more height since no form above */}
-                <div className="body overflow-y-auto max-h-[60vh]">
+                {/* Table */}
+                <div className="body overflow-y-auto flex-1 min-h-0">
                     {loading ? (
                         <div className="flex justify-center items-center py-12">
                             <div className="w-8 h-8 border-4 border-[#E67E22] border-t-transparent rounded-full animate-spin"></div>
@@ -133,17 +176,21 @@ const PublicList = () => {
                     ) : animes.length === 0 ? (
                         <div className="text-center py-12 text-gray-400">
                             <p className="text-lg font-medium">
-                                {listSearch || filterStatus !== "All" ? "No anime matches the search" : "This list is empty"}
+                                {listSearch || filterStatus !== "All"
+                                    ? "No results match the search"
+                                    : isMovie
+                                        ? "No movies in this list"
+                                        : "This list is empty"}
                             </p>
                         </div>
                     ) : (
-                        <AnimeTable animes={animes} setCurrentId={() => {}} readOnly={true} />
+                        <AnimeTable animes={animes} setCurrentId={() => {}} readOnly={true} mode={activeTab} />
                     )}
                 </div>
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                    <div className="flex justify-center items-center gap-2 py-2">
+                    <div className="flex justify-center items-center gap-2 py-3 flex-shrink-0">
                         <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}
                             className="px-3 py-1 text-sm rounded-lg border border-gray-300 hover:border-[#E67E22] disabled:opacity-40 disabled:cursor-not-allowed transition">
                             ← Prev

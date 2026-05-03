@@ -33,19 +33,18 @@ const Navbar = () => {
   }
 
   return (
-    <div className="bg-[#2C3E50] px-6 py-2 shadow-md flex items-center justify-between">
+    <div className="bg-[#2C3E50] px-3 sm:px-6 py-2 shadow-md flex items-center justify-between flex-shrink-0">
 
       {/* Logo */}
-      <img src="/logo.png" alt="logo" className="h-12 cursor-pointer" onClick={() => navigate("/")} />
+      <img src="/logo.png" alt="logo" className="h-10 sm:h-12 cursor-pointer" onClick={() => navigate("/")} />
 
       {/* Right Side */}
       {isPublicListView ? (
-        // On public list view: show only a "Back" or "Login/Home" button
-        <div className="flex items-center gap-3 text-white">
+        <div className="flex items-center gap-2 text-white">
           {user ? (
             <button
               onClick={() => navigate("/")}
-              className="flex items-center gap-1 bg-[#E67E22] px-4 py-1.5 rounded-full text-white font-semibold hover:opacity-90 transition"
+              className="flex items-center gap-1 bg-[#E67E22] px-3 sm:px-4 py-1.5 rounded-full text-white text-sm font-semibold hover:opacity-90 transition"
             >
               <span className="material-symbols-outlined text-base">arrow_back</span>
               My List
@@ -60,28 +59,28 @@ const Navbar = () => {
           )}
         </div>
       ) : user ? (
-        <div className="flex items-center gap-3 text-white">
+        <div className="flex items-center gap-2 sm:gap-3 text-white">
           {/* Avatar */}
-          <div className="w-9 h-9 rounded-full bg-[#E67E22] flex items-center justify-center font-bold uppercase">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#E67E22] flex items-center justify-center font-bold uppercase text-sm sm:text-base">
             {user[0]}
           </div>
 
-          {/* Name */}
-          <span className="font-medium">{user}</span>
+          {/* Name - hidden on very small screens */}
+          <span className="font-medium hidden sm:inline">{user}</span>
 
           {/* Share Button */}
           <button
             onClick={shareList}
-            className="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full text-white text-sm font-medium hover:bg-white/20 transition"
+            className="flex items-center gap-1 bg-white/10 px-2 sm:px-3 py-1.5 rounded-full text-white text-xs sm:text-sm font-medium hover:bg-white/20 transition"
             title="Copy share link"
           >
             <span className="material-symbols-outlined text-base">share</span>
-            Share
+            <span className="hidden sm:inline">Share</span>
           </button>
 
           <button
             onClick={logout}
-            className="bg-[#E67E22] px-4 py-1.5 rounded-full text-white font-semibold hover:opacity-90 transition"
+            className="bg-[#E67E22] px-3 sm:px-4 py-1.5 rounded-full text-white text-sm font-semibold hover:opacity-90 transition"
           >
             Logout
           </button>

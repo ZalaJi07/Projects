@@ -21,6 +21,9 @@ const Manager = () => {
 
   const [currentId, setCurrentId] = useState(null);
 
+  // Tab state: "series" or "movie"
+  const [activeTab, setActiveTab] = useState("series");
+
   // Search, filter, sort, pagination state
   const [page, setPage] = useState(1);
   const [listSearch, setListSearch] = useState("");
@@ -29,21 +32,28 @@ const Manager = () => {
   const [sortOrder, setSortOrder] = useState("desc");
   const searchDebounceRef = useRef(null);
 
-
-  // Fetch animes with current filters
+  // Fetch animes with current filters + tab type
   useEffect(() => {
     if (user) {
       setLoading(true);
-      dispatch(getAnimes(page, 20, listSearch, filterStatus === "All" ? "" : filterStatus, sortField, sortOrder))
+      dispatch(getAnimes(page, 20, listSearch, filterStatus === "All" ? "" : filterStatus, sortField, sortOrder, activeTab))
         .then(() => setLoading(false))
         .catch(() => setLoading(false));
     }
-  }, [page, listSearch, filterStatus, sortField, sortOrder, currentId, dispatch]);
+  }, [page, listSearch, filterStatus, sortField, sortOrder, currentId, activeTab, dispatch]);
 
-  // Reset to page 1 when search/filter/sort changes
+  // Reset to page 1 when search/filter/sort/tab changes
   useEffect(() => {
     setPage(1);
-  }, [listSearch, filterStatus, sortField, sortOrder]);
+  }, [listSearch, filterStatus, sortField, sortOrder, activeTab]);
+
+  // Reset form when switching tabs
+  useEffect(() => {
+    setList({ name: "", status: "", episodes: "", movies: "", malId: null });
+    setCurrentId(null);
+    setSearchResults([]);
+    setFilterStatus("All");
+  }, [activeTab]);
 
   // Debounced list search
   const handleListSearchChange = (e) => {
@@ -73,17 +83,27 @@ const Manager = () => {
 
     debounceRef.current = setTimeout(async () => {
       try {
-        const response = await fetch(
-          `https://api.jikan.moe/v4/anime?q=${searchTerm}&limit=10`
-        );
+        // Build Jikan URL: SFW + type filter based on active tab
+        let url = `https://api.jikan.moe/v4/anime?q=${searchTerm}&limit=10&sfw=true`;
+        if (activeTab === "movie") {
+          url += "&type=movie";
+        }
+
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`Error: ${response.statusText}`);
         const data = await response.json();
         if (data && data.data) {
-          const filteredResults = data.data.filter((anime) =>
+          let filteredResults = data.data.filter((anime) =>
             anime.title_english
               ? anime.title_english.toLowerCase().includes(searchTerm.toLowerCase())
               : anime.title.toLowerCase().includes(searchTerm.toLowerCase())
           );
+
+          // For series tab: exclude movies from results
+          if (activeTab === "series") {
+            filteredResults = filteredResults.filter((anime) => anime.type !== "Movie");
+          }
+
           setSearchResults(filteredResults.slice(0, 10));
         }
       } catch (error) {
@@ -93,19 +113,34 @@ const Manager = () => {
     }, 400);
 
     return () => clearTimeout(debounceRef.current);
-  }, [searchTerm]);
+  }, [searchTerm, activeTab]);
 
-  const saveAnime = (e) => {
-    if (list.name && list.status && list.episodes && list.movies) {
+  const saveAnime = async (e) => {
+    if (activeTab === "movie") {
+      // Movies only need a name
+      if (!list.name) return;
       e.preventDefault();
+      const movieData = { ...list, status: "Finished", episodes: 0, movies: 0, entryType: "movie" };
       if (currentId) {
-        dispatch(updateAnime(currentId, list));
+        await dispatch(updateAnime(currentId, movieData));
         setCurrentId(null);
       } else {
-        dispatch(createAnime(list));
+        await dispatch(createAnime(movieData));
       }
-      setList({ name: "", status: "", episodes: "", movies: "", malId: null });
+    } else {
+      // Series needs all fields
+      if (!(list.name && list.status && list.episodes && list.movies)) return;
+      e.preventDefault();
+      const seriesData = { ...list, entryType: "series" };
+      if (currentId) {
+        await dispatch(updateAnime(currentId, seriesData));
+        setCurrentId(null);
+      } else {
+        await dispatch(createAnime(seriesData));
+      }
     }
+    setList({ name: "", status: "", episodes: "", movies: "", malId: null });
+    dispatch(getAnimes(page, 20, listSearch, filterStatus === "All" ? "" : filterStatus, sortField, sortOrder, activeTab));
   };
 
   const handelChange = (e) => setList({ ...list, [e.target.name]: e.target.value });
@@ -124,9 +159,34 @@ const Manager = () => {
   }
 
   return (
-    <div className="flex justify-center bg-[#ECF0F1] flex-grow relative max-h-[83.6vh]">
-      <div className="w-[90vw] md:w-[60vw]">
+    <div className="flex justify-center bg-[#ECF0F1] flex-grow overflow-auto">
+      <div className="w-[95vw] md:w-[60vw] flex flex-col py-2 px-1 sm:px-0">
         <ManagerHeader />
+
+        {/* ── Series / Movies Tab Toggle ── */}
+        <div className="flex rounded-lg overflow-hidden border border-gray-300 mb-3 self-center">
+          <button
+            onClick={() => setActiveTab("series")}
+            className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${
+              activeTab === "series"
+                ? "bg-[#E67E22] text-white"
+                : "bg-white text-gray-600 hover:bg-orange-50"
+            }`}
+          >
+            Series
+          </button>
+          <button
+            onClick={() => setActiveTab("movie")}
+            className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${
+              activeTab === "movie"
+                ? "bg-[#E67E22] text-white"
+                : "bg-white text-gray-600 hover:bg-orange-50"
+            }`}
+          >
+            Movies
+          </button>
+        </div>
+
         <AnimeForm
           list={list}
           handelChange={handelChange}
@@ -136,16 +196,17 @@ const Manager = () => {
           setSearchResults={setSearchResults}
           setList={setList}
           currentId={currentId}
+          activeTab={activeTab}
         />
 
         {/* Search, Filter & Sort Controls */}
         <div className="flex flex-wrap items-center gap-2 my-2">
           {/* Search in your list */}
-          <div className="flex items-center gap-1 flex-1 min-w-[150px]">
+          <div className="flex items-center gap-1 w-full sm:flex-1 sm:min-w-[150px]">
             <span className="material-symbols-outlined text-[#E67E22] text-xl">search</span>
             <input
               type="text"
-              placeholder="Search your list..."
+              placeholder={activeTab === "movie" ? "Search your movies..." : "Search your list..."}
               onChange={handleListSearchChange}
               className="border border-gray-300 bg-white rounded-lg px-3 py-1.5 text-sm w-full
                      shadow-sm hover:border-[#E67E22] focus:outline-none focus:ring-2 
@@ -153,29 +214,31 @@ const Manager = () => {
             />
           </div>
 
-          {/* Filter by Status */}
-          <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[#E67E22] text-xl">filter_alt</span>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="border border-gray-300 bg-white rounded-lg px-3 py-1.5 text-sm
-                     shadow-sm hover:border-[#E67E22] focus:outline-none focus:ring-2 
-                     focus:ring-[#E67E22] transition"
-            >
-              <option value="All">All</option>
-              <option value="Finished">Finished</option>
-              <option value="CaughtUp">CaughtUp</option>
-              <option value="Watching">Watching</option>
-              <option value="OnHold">OnHold</option>
-              <option value="Pending">Pending</option>
-              <option value="Dropped">Dropped</option>
-            </select>
-          </div>
+          {/* Filter by Status — only for series */}
+          {activeTab === "series" && (
+            <div className="flex items-center gap-1">
+              <span className="material-symbols-outlined text-[#E67E22] text-xl">filter_alt</span>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="border border-gray-300 bg-white rounded-lg px-2 sm:px-3 py-1.5 text-sm
+                       shadow-sm hover:border-[#E67E22] focus:outline-none focus:ring-2 
+                       focus:ring-[#E67E22] transition"
+              >
+                <option value="All">All</option>
+                <option value="Finished">Finished</option>
+                <option value="CaughtUp">CaughtUp</option>
+                <option value="Watching">Watching</option>
+                <option value="OnHold">OnHold</option>
+                <option value="Pending">Pending</option>
+                <option value="Dropped">Dropped</option>
+              </select>
+            </div>
+          )}
 
           {/* Sort buttons */}
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[#E67E22] text-xl">sort</span>
+            <span className="material-symbols-outlined text-[#E67E22] text-xl hidden sm:inline">sort</span>
             <button
               onClick={() => toggleSort("name")}
               className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "name" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"
@@ -183,13 +246,15 @@ const Manager = () => {
             >
               Name {sortField === "name" && (sortOrder === "asc" ? "↑" : "↓")}
             </button>
-            <button
-              onClick={() => toggleSort("episodes")}
-              className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "episodes" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"
-                }`}
-            >
-              Episodes {sortField === "episodes" && (sortOrder === "asc" ? "↑" : "↓")}
-            </button>
+            {activeTab === "series" && (
+              <button
+                onClick={() => toggleSort("episodes")}
+                className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "episodes" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"
+                  }`}
+              >
+                Ep {sortField === "episodes" && (sortOrder === "asc" ? "↑" : "↓")}
+              </button>
+            )}
             <button
               onClick={() => toggleSort("createdAt")}
               className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "createdAt" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"
@@ -200,11 +265,13 @@ const Manager = () => {
           </div>
 
           {/* Item count */}
-          <span className="text-xs text-gray-500 ml-auto">{totalItems} anime</span>
+          <span className="text-xs text-gray-500 ml-auto">
+            {totalItems} {activeTab === "movie" ? "movie" : "anime"}{totalItems !== 1 ? "s" : ""}
+          </span>
         </div>
 
         {/* Table area */}
-        <div className="body overflow-y-auto max-h-[35vh]">
+        <div className="body overflow-y-auto flex-1 min-h-0">
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <div className="w-8 h-8 border-4 border-[#E67E22] border-t-transparent rounded-full animate-spin"></div>
@@ -212,23 +279,32 @@ const Manager = () => {
           ) : animes.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
               <p className="text-lg font-medium">
-                {listSearch || filterStatus !== "All" ? "No anime matches your search" : "Your anime list is empty"}
+                {listSearch || filterStatus !== "All"
+                  ? "No results match your search"
+                  : activeTab === "movie"
+                    ? "No movies added yet"
+                    : "Your anime list is empty"}
               </p>
               <p className="text-sm mt-1">
-                {listSearch || filterStatus !== "All" ? "Try different filters" : "Add your first anime above to get started!"}
+                {listSearch || filterStatus !== "All"
+                  ? "Try different filters"
+                  : activeTab === "movie"
+                    ? "Add your first movie above!"
+                    : "Add your first anime above to get started!"}
               </p>
             </div>
           ) : (
             <AnimeTable
               animes={animes}
               setCurrentId={setCurrentId}
+              mode={activeTab}
             />
           )}
         </div>
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 py-2">
+          <div className="flex justify-center items-center gap-2 py-3 flex-shrink-0">
             <button
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}

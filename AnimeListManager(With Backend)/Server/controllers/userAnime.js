@@ -5,10 +5,16 @@ export const getAnime = async (req, res) => {
     try {
         if (!req.userId) return res.status(401).json({ message: "Unauthenticated" });
 
-        const { page = 1, limit = 20, search = '', status = '', sort = 'createdAt', order = 'desc' } = req.query;
+        const { page = 1, limit = 20, search = '', status = '', sort = 'createdAt', order = 'desc', entryType = 'series' } = req.query;
 
         // Build filter
         const filter = { creator: req.userId };
+        // Old entries have no entryType — treat them as "series"
+        if (entryType === 'series') {
+            filter.$or = [{ entryType: 'series' }, { entryType: { $exists: false } }];
+        } else {
+            filter.entryType = entryType;
+        }
         if (search) filter.name = { $regex: search, $options: 'i' }; // case-insensitive search
         if (status && status !== 'All') filter.status = status;
 

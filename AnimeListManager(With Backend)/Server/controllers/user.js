@@ -15,7 +15,7 @@ export const signIn = async (req, res) => {
 
         if (!isPasswordCorrect) return res.status(400).json({ message: "Invalid credentials." });
 
-        const token = jwt.sign({ email: existingUser.email, id: existingUser._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        const token = jwt.sign({ email: existingUser.email, id: existingUser._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
         const { password: _password, ...userWithoutPassword } = existingUser._doc;
         res.status(200).json({ result: userWithoutPassword, token });
@@ -38,7 +38,7 @@ export const signUp = async (req, res) => {
 
         const result = await User.create({ email, password: hashedPassword, username });
 
-        const token = jwt.sign({ email: result.email, id: result._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        const token = jwt.sign({ email: result.email, id: result._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
         res.status(200).json({ result, token });
     } catch (error) {
@@ -57,12 +57,12 @@ export const googleSignIn = async (req, res) => {
         const existingUser = await User.findOne({ email });
 
         if (existingUser) {
-            const token = jwt.sign({ email: existingUser.email, id: existingUser._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+            const token = jwt.sign({ email: existingUser.email, id: existingUser._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
             const { password, ...userWithoutPassword } = existingUser._doc;
             res.status(200).json({ result: userWithoutPassword, token });
         } else {
             const result = await User.create({ email, username: name, password: sub }); // Using sub as password for now, though it can be random
-            const token = jwt.sign({ email: result.email, id: result._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+            const token = jwt.sign({ email: result.email, id: result._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
             res.status(200).json({ result, token });
         }
     } catch (error) {

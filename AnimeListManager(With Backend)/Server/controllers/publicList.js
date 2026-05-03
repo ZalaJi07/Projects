@@ -8,9 +8,14 @@ export const getPublicList = async (req, res) => {
         const user = await User.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } });
         if (!user) return res.status(404).json({ message: "User not found." });
 
-        const { page = 1, limit = 20, search = '', status = '', sort = 'createdAt', order = 'desc' } = req.query;
+        const { page = 1, limit = 20, search = '', status = '', sort = 'createdAt', order = 'desc', entryType = 'series' } = req.query;
 
         const filter = { creator: user._id.toString() };
+        if (entryType === 'series') {
+            filter.$or = [{ entryType: 'series' }, { entryType: { $exists: false } }];
+        } else {
+            filter.entryType = entryType;
+        }
         if (search) filter.name = { $regex: search, $options: 'i' };
         if (status && status !== 'All') filter.status = status;
 

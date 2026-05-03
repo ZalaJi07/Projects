@@ -3,9 +3,9 @@ import * as api from '../api'
 import toast from 'react-hot-toast'
 
 // Action Creators
-export const getAnimes = (page, limit, search, status, sort, order) => async (dispatch) => {
+export const getAnimes = (page, limit, search, status, sort, order, entryType = 'series') => async (dispatch) => {
     try {
-        const { data } = await api.fetchAnimes(page, limit, search, status, sort, order);
+        const { data } = await api.fetchAnimes(page, limit, search, status, sort, order, entryType);
 
         dispatch({ type: FETCHALL, payload: data });
     } catch (error) {
