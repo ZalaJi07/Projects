@@ -168,7 +168,7 @@ const PublicList = () => {
                 </div>
 
                 {/* Table */}
-                <div className="body overflow-y-auto flex-1 min-h-0">
+                <div className="min-h-[60vh] md:min-h-0 overflow-y-auto md:flex-1">
                     {loading ? (
                         <div className="flex justify-center items-center py-12">
                             <div className="w-8 h-8 border-4 border-[#E67E22] border-t-transparent rounded-full animate-spin"></div>

@@ -3,6 +3,44 @@ import { deleteAnime, increaseEp, decreaseEp } from "../actions/entry.js";
 import { useState, useEffect } from "react";
 import { getAnimeDetails } from "../utils/jikanCache.js";
 
+// ── Delete Confirmation Modal ──
+const DeleteConfirmModal = ({ item, onConfirm, onCancel }) => {
+  if (!item) return null;
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onCancel}>
+      <div
+        className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-5 animate-[fadeIn_0.15s_ease-out]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+            <span className="material-symbols-outlined text-red-500 text-xl">delete</span>
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-800">Remove from list?</h3>
+            <p className="text-sm text-gray-500 mt-0.5 break-words">"{item.name}"</p>
+          </div>
+        </div>
+        <p className="text-sm text-gray-500 mb-5">This action cannot be undone.</p>
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AnimeImage = ({ malId, size = "sm" }) => {
   const [imageUrl, setImageUrl] = useState(null);
 
@@ -113,7 +151,7 @@ const StatusBadge = ({ status }) => {
 };
 
 // ── Mobile card layout ──
-const AnimeCard = ({ item, readOnly, setCurrentId, dispatch, onSelect, mode }) => {
+const AnimeCard = ({ item, readOnly, setCurrentId, dispatch, onSelect, onDelete, mode }) => {
   const isMovie = mode === "movie";
 
   return (
@@ -132,7 +170,7 @@ const AnimeCard = ({ item, readOnly, setCurrentId, dispatch, onSelect, mode }) =
             <div className="flex items-center justify-between mt-2 text-xs text-gray-600">
               <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                 <span className="font-medium">Ep:</span>
-                {readOnly ? (
+                {readOnly || (item.status === "Dropped" || item.status === "Finished") ? (
                   <span>{item.episodes}</span>
                 ) : (
                   <div className="flex items-center gap-1">
@@ -161,7 +199,7 @@ const AnimeCard = ({ item, readOnly, setCurrentId, dispatch, onSelect, mode }) =
           >edit</span>
           <span
             className="material-symbols-outlined text-[#ec7c19] text-xl hover:scale-110 cursor-pointer"
-            onClick={() => dispatch(deleteAnime(item._id))}
+            onClick={() => onDelete(item)}
           >delete</span>
         </div>
       )}
@@ -170,7 +208,7 @@ const AnimeCard = ({ item, readOnly, setCurrentId, dispatch, onSelect, mode }) =
 };
 
 // ── Desktop table row for Series ──
-const SeriesRow = ({ item, readOnly, setCurrentId, dispatch, onSelect }) => (
+const SeriesRow = ({ item, readOnly, setCurrentId, dispatch, onSelect, onDelete }) => (
   <tr className="hover:bg-orange-200 transition cursor-pointer" onClick={() => onSelect(item)}>
     <td className="text-center border border-white py-1 px-1 w-[2.8rem]">
       <AnimeImage malId={item.malId} />
@@ -185,10 +223,10 @@ const SeriesRow = ({ item, readOnly, setCurrentId, dispatch, onSelect }) => (
       {readOnly ? (
         item.episodes
       ) : (
-        <div className="flex justify-between items-center">
-          <span className="material-symbols-outlined cursor-pointer" onClick={() => dispatch(decreaseEp(item._id))}>remove</span>
+        <div className={`flex items-center ${(item.status !== "Dropped" && item.status !== "Finished") ? "justify-between" : "justify-center"}`}>
+          {(item.status !== "Dropped" && item.status !== "Finished") ? <span className="material-symbols-outlined cursor-pointer" onClick={() => dispatch(decreaseEp(item._id))}>remove</span> : null}
           {item.episodes}
-          <span className="material-symbols-outlined cursor-pointer" onClick={() => dispatch(increaseEp(item._id))}>add</span>
+          {(item.status !== "Dropped" && item.status !== "Finished") ? <span className="material-symbols-outlined cursor-pointer" onClick={() => dispatch(increaseEp(item._id))}>add</span> : null}
         </div>
       )}
     </td>
@@ -199,7 +237,7 @@ const SeriesRow = ({ item, readOnly, setCurrentId, dispatch, onSelect }) => (
       <td className="text-center border py-1 px-2" onClick={(e) => e.stopPropagation()}>
         <div className="flex gap-1 justify-center">
           <span className="material-symbols-outlined text-[#ec7c19] hover:scale-110 cursor-pointer" onClick={() => setCurrentId(item._id)}>edit</span>
-          <span className="material-symbols-outlined text-[#ec7c19] hover:scale-110 cursor-pointer" onClick={() => dispatch(deleteAnime(item._id))}>delete</span>
+          <span className="material-symbols-outlined text-[#ec7c19] hover:scale-110 cursor-pointer" onClick={() => onDelete(item)}>delete</span>
         </div>
       </td>
     )}
@@ -207,7 +245,7 @@ const SeriesRow = ({ item, readOnly, setCurrentId, dispatch, onSelect }) => (
 );
 
 // ── Desktop table row for Movies (simpler) ──
-const MovieRow = ({ item, readOnly, setCurrentId, dispatch, onSelect }) => (
+const MovieRow = ({ item, readOnly, setCurrentId, dispatch, onSelect, onDelete }) => (
   <tr className="hover:bg-orange-200 transition cursor-pointer" onClick={() => onSelect(item)}>
     <td className="text-center border border-white py-1 px-1 w-[2.8rem]">
       <AnimeImage malId={item.malId} />
@@ -219,7 +257,7 @@ const MovieRow = ({ item, readOnly, setCurrentId, dispatch, onSelect }) => (
       <td className="text-center border py-1 px-2" onClick={(e) => e.stopPropagation()}>
         <div className="flex gap-1 justify-center">
           <span className="material-symbols-outlined text-[#ec7c19] hover:scale-110 cursor-pointer" onClick={() => setCurrentId(item._id)}>edit</span>
-          <span className="material-symbols-outlined text-[#ec7c19] hover:scale-110 cursor-pointer" onClick={() => dispatch(deleteAnime(item._id))}>delete</span>
+          <span className="material-symbols-outlined text-[#ec7c19] hover:scale-110 cursor-pointer" onClick={() => onDelete(item)}>delete</span>
         </div>
       </td>
     )}
@@ -229,7 +267,16 @@ const MovieRow = ({ item, readOnly, setCurrentId, dispatch, onSelect }) => (
 const AnimeTable = ({ animes, setCurrentId, readOnly = false, mode = "series" }) => {
   const dispatch = useDispatch();
   const [selectedAnime, setSelectedAnime] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const isMovie = mode === "movie";
+
+  const handleDelete = (item) => setDeleteTarget(item);
+  const confirmDeleteAction = () => {
+    if (deleteTarget) {
+      dispatch(deleteAnime(deleteTarget._id));
+      setDeleteTarget(null);
+    }
+  };
 
   return (
     <>
@@ -263,6 +310,7 @@ const AnimeTable = ({ animes, setCurrentId, readOnly = false, mode = "series" })
                 setCurrentId={setCurrentId}
                 dispatch={dispatch}
                 onSelect={setSelectedAnime}
+                onDelete={handleDelete}
               />
             ) : (
               <SeriesRow
@@ -272,6 +320,7 @@ const AnimeTable = ({ animes, setCurrentId, readOnly = false, mode = "series" })
                 setCurrentId={setCurrentId}
                 dispatch={dispatch}
                 onSelect={setSelectedAnime}
+                onDelete={handleDelete}
               />
             )
           )}
@@ -288,14 +337,23 @@ const AnimeTable = ({ animes, setCurrentId, readOnly = false, mode = "series" })
             setCurrentId={setCurrentId}
             dispatch={dispatch}
             onSelect={setSelectedAnime}
+            onDelete={handleDelete}
             mode={mode}
           />
         ))}
       </div>
 
       {selectedAnime && <AnimeDetailModal anime={selectedAnime} onClose={() => setSelectedAnime(null)} />}
+      {deleteTarget && (
+        <DeleteConfirmModal
+          item={deleteTarget}
+          onConfirm={confirmDeleteAction}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </>
   );
 };
 
 export default AnimeTable;
+

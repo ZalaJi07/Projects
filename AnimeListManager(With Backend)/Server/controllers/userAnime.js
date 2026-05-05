@@ -44,8 +44,17 @@ export const createAnime = async (req, res) => {
 
     if (!req.userId) return res.status(401).json({ message: "Unauthenticated" });
 
-    const newAnime = new UserAnime({ ...anime, creator: req.userId });
     try {
+        // Duplicate check: malId first, then name fallback
+        let existing;
+        if (anime.malId) {
+            existing = await UserAnime.findOne({ creator: req.userId, malId: anime.malId });
+        } else {
+            existing = await UserAnime.findOne({ creator: req.userId, name: { $regex: new RegExp(`^${anime.name}$`, 'i') } });
+        }
+        if (existing) return res.status(409).json({ message: `"${anime.name}" is already in your list.` });
+
+        const newAnime = new UserAnime({ ...anime, creator: req.userId });
         await newAnime.save();
         res.status(201).json(newAnime);
     } catch (error) {

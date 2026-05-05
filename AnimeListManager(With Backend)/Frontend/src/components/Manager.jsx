@@ -27,6 +27,7 @@ const Manager = () => {
   // Search, filter, sort, pagination state
   const [page, setPage] = useState(1);
   const [listSearch, setListSearch] = useState("");
+  const [listSearchDisplay, setListSearchDisplay] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const [sortField, setSortField] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
@@ -53,12 +54,15 @@ const Manager = () => {
     setCurrentId(null);
     setSearchResults([]);
     setFilterStatus("All");
+    setListSearch("");
+    setListSearchDisplay("");
   }, [activeTab]);
 
   // Debounced list search
   const handleListSearchChange = (e) => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     const value = e.target.value;
+    setListSearchDisplay(value);
     searchDebounceRef.current = setTimeout(() => {
       setListSearch(value);
     }, 400);
@@ -93,11 +97,7 @@ const Manager = () => {
         if (!response.ok) throw new Error(`Error: ${response.statusText}`);
         const data = await response.json();
         if (data && data.data) {
-          let filteredResults = data.data.filter((anime) =>
-            anime.title_english
-              ? anime.title_english.toLowerCase().includes(searchTerm.toLowerCase())
-              : anime.title.toLowerCase().includes(searchTerm.toLowerCase())
-          );
+          let filteredResults = data.data;
 
           // For series tab: exclude movies from results
           if (activeTab === "series") {
@@ -167,21 +167,19 @@ const Manager = () => {
         <div className="flex rounded-lg overflow-hidden border border-gray-300 mb-3 self-center">
           <button
             onClick={() => setActiveTab("series")}
-            className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${
-              activeTab === "series"
-                ? "bg-[#E67E22] text-white"
-                : "bg-white text-gray-600 hover:bg-orange-50"
-            }`}
+            className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${activeTab === "series"
+              ? "bg-[#E67E22] text-white"
+              : "bg-white text-gray-600 hover:bg-orange-50"
+              }`}
           >
             Series
           </button>
           <button
             onClick={() => setActiveTab("movie")}
-            className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${
-              activeTab === "movie"
-                ? "bg-[#E67E22] text-white"
-                : "bg-white text-gray-600 hover:bg-orange-50"
-            }`}
+            className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${activeTab === "movie"
+              ? "bg-[#E67E22] text-white"
+              : "bg-white text-gray-600 hover:bg-orange-50"
+              }`}
           >
             Movies
           </button>
@@ -205,8 +203,10 @@ const Manager = () => {
           <div className="flex items-center gap-1 w-full sm:flex-1 sm:min-w-[150px]">
             <span className="material-symbols-outlined text-[#E67E22] text-xl">search</span>
             <input
+              key={activeTab}
               type="text"
               placeholder={activeTab === "movie" ? "Search your movies..." : "Search your list..."}
+              value={listSearchDisplay}
               onChange={handleListSearchChange}
               className="border border-gray-300 bg-white rounded-lg px-3 py-1.5 text-sm w-full
                      shadow-sm hover:border-[#E67E22] focus:outline-none focus:ring-2 
@@ -271,27 +271,32 @@ const Manager = () => {
         </div>
 
         {/* Table area */}
-        <div className="body overflow-y-auto flex-1 min-h-0">
+        <div className="min-h-[60vh] md:min-h-0 overflow-y-auto md:flex-1">
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <div className="w-8 h-8 border-4 border-[#E67E22] border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : animes.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
-              <p className="text-lg font-medium">
-                {listSearch || filterStatus !== "All"
-                  ? "No results match your search"
-                  : activeTab === "movie"
-                    ? "No movies added yet"
-                    : "Your anime list is empty"}
-              </p>
-              <p className="text-sm mt-1">
-                {listSearch || filterStatus !== "All"
-                  ? "Try different filters"
-                  : activeTab === "movie"
-                    ? "Add your first movie above!"
-                    : "Add your first anime above to get started!"}
-              </p>
+            <div className="text-center py-16 text-gray-400">
+              {listSearch || filterStatus !== "All" ? (
+                <>
+                  <span className="material-symbols-outlined text-6xl text-gray-300 mb-3 block">search_off</span>
+                  <p className="text-lg font-semibold text-gray-500">No results found</p>
+                  <p className="text-sm mt-1">Try a different search or filter</p>
+                </>
+              ) : activeTab === "movie" ? (
+                <>
+                  <span className="material-symbols-outlined text-6xl text-orange-200 mb-3 block">movie</span>
+                  <p className="text-lg font-semibold text-gray-500">No movies yet</p>
+                  <p className="text-sm mt-1">Search and add your favorite anime movies above! 🍿</p>
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-6xl text-orange-200 mb-3 block">library_add</span>
+                  <p className="text-lg font-semibold text-gray-500">Your anime list is empty</p>
+                  <p className="text-sm mt-1">Start building your collection — add your first anime above! ✨</p>
+                </>
+              )}
             </div>
           ) : (
             <AnimeTable

@@ -31,7 +31,7 @@ function App() {
         }}
       />
       <ServerWakeUp>
-        <div onContextMenu={(e) => e.preventDefault()} className="flex flex-col h-screen overflow-hidden">
+        <div onContextMenu={(e) => e.preventDefault()} className="flex flex-col min-h-screen md:h-screen md:overflow-hidden">
           <Navbar />
           <Routes>
             <Route path="/" element={<Manager />} />
