@@ -16,9 +16,12 @@ const Navbar = () => {
     setUser(JSON.parse(localStorage.getItem("profile"))?.result?.username);
   }, [location]);
 
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   const logout = () => {
     dispatch({ type: "LOGOUT" })
     toast.success("Logged out successfully.");
+    setShowLogoutModal(false);
     navigate("/")
     setUser(null)
   }
@@ -33,6 +36,7 @@ const Navbar = () => {
   }
 
   return (
+    <>
     <div className="bg-[#2C3E50] px-3 sm:px-6 py-2 shadow-md flex items-center justify-between flex-shrink-0">
 
       {/* Logo */}
@@ -79,7 +83,7 @@ const Navbar = () => {
           </button>
 
           <button
-            onClick={logout}
+            onClick={() => setShowLogoutModal(true)}
             className="bg-[#E67E22] px-3 sm:px-4 py-1.5 rounded-full text-white text-sm font-semibold hover:opacity-90 transition"
           >
             Logout
@@ -94,6 +98,42 @@ const Navbar = () => {
         </button>
       )}
     </div>
+
+    {/* Logout Confirmation Modal */}
+    {showLogoutModal && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowLogoutModal(false)}>
+        <div
+          className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-5 animate-fadeIn"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+              <span className="material-symbols-outlined text-[#E67E22] text-xl">logout</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-800">Logout?</h3>
+              <p className="text-sm text-gray-500 mt-0.5">Signed in as <strong>{user}</strong></p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-500 mb-5">Are you sure you want to log out?</p>
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={() => setShowLogoutModal(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={logout}
+              className="px-4 py-2 text-sm font-medium text-white bg-[#E67E22] rounded-lg hover:bg-[#d35400] transition"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
 

@@ -97,17 +97,15 @@ const PublicList = () => {
                 <div className="flex rounded-lg overflow-hidden border border-gray-300 mb-3 self-center">
                     <button
                         onClick={() => setActiveTab("series")}
-                        className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${
-                            activeTab === "series" ? "bg-[#E67E22] text-white" : "bg-white text-gray-600 hover:bg-orange-50"
-                        }`}
+                        className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${activeTab === "series" ? "bg-[#E67E22] text-white" : "bg-white text-gray-600 hover:bg-orange-50"
+                            }`}
                     >
                         Series
                     </button>
                     <button
                         onClick={() => setActiveTab("movie")}
-                        className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${
-                            activeTab === "movie" ? "bg-[#E67E22] text-white" : "bg-white text-gray-600 hover:bg-orange-50"
-                        }`}
+                        className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${activeTab === "movie" ? "bg-[#E67E22] text-white" : "bg-white text-gray-600 hover:bg-orange-50"
+                            }`}
                     >
                         Movies
                     </button>
@@ -184,7 +182,7 @@ const PublicList = () => {
                             </p>
                         </div>
                     ) : (
-                        <AnimeTable animes={animes} setCurrentId={() => {}} readOnly={true} mode={activeTab} />
+                        <AnimeTable animes={animes} setCurrentId={() => { }} readOnly={true} mode={activeTab} />
                     )}
                 </div>
 

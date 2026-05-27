@@ -3,7 +3,7 @@
 // Rate-limited queue to respect Jikan's 3 req/sec limit
 
 const CACHE_KEY = "jikan_cache";
-const CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const CACHE_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // ── In-memory cache (instant access within session) ──
 const memoryCache = {};
@@ -55,7 +55,7 @@ const saveToLocalCache = (malId, data) => {
 // ── Rate-limited request queue ──
 const queue = [];
 let processing = false;
-const DELAY_MS = 400; // ~2.5 req/sec (safely under 3/sec limit)
+const DELAY_MS = 400; // ~2.5 req/sec 
 
 const processQueue = async () => {
     if (processing || queue.length === 0) return;
