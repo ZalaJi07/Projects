@@ -39,10 +39,41 @@ export const getAnime = async (req, res) => {
     }
 };
 
+// Fetch ALL entries for the user (no pagination) — used for client-side export
+// Intentionally lightweight: just a plain DB read + JSON response, zero CPU formatting
+export const getAllAnime = async (req, res) => {
+    try {
+        if (!req.userId) return res.status(401).json({ message: "Unauthenticated" });
+
+        const animeRows = await UserAnime.find({ creator: req.userId })
+            .sort({ createdAt: -1 })
+            .select('name status episodes movies malId entryType createdAt');
+
+        res.status(200).json({ data: animeRows });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+// Strip HTML tags and trim whitespace
+const sanitizeName = (name) => {
+    if (typeof name !== 'string') return '';
+    return name.replace(/<[^>]*>/g, '').trim();
+};
+
+// Escape special regex characters to prevent ReDoS
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export const createAnime = async (req, res) => {
     const anime = req.body;
 
     if (!req.userId) return res.status(401).json({ message: "Unauthenticated" });
+
+    // Sanitize name
+    anime.name = sanitizeName(anime.name);
+    if (!anime.name) return res.status(400).json({ message: "Anime name is required." });
+    if (anime.name.length > 200) return res.status(400).json({ message: "Anime name is too long (max 200 characters)." });
 
     try {
         // Duplicate check: malId first, then name fallback
@@ -50,7 +81,7 @@ export const createAnime = async (req, res) => {
         if (anime.malId) {
             existing = await UserAnime.findOne({ creator: req.userId, malId: anime.malId });
         } else {
-            existing = await UserAnime.findOne({ creator: req.userId, name: { $regex: new RegExp(`^${anime.name}$`, 'i') } });
+            existing = await UserAnime.findOne({ creator: req.userId, name: { $regex: new RegExp(`^${escapeRegex(anime.name)}$`, 'i') } });
         }
         if (existing) return res.status(409).json({ message: `"${anime.name}" is already in your list.` });
 
@@ -67,6 +98,13 @@ export const updateAnime = async (req, res) => {
     const anime = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('No anime with that id!');
+
+    // Sanitize name if provided
+    if (anime.name !== undefined) {
+        anime.name = sanitizeName(anime.name);
+        if (!anime.name) return res.status(400).json({ message: "Anime name is required." });
+        if (anime.name.length > 200) return res.status(400).json({ message: "Anime name is too long (max 200 characters)." });
+    }
 
     const existing = await UserAnime.findById(_id);
     if (!existing || existing.creator !== req.userId) return res.status(403).json({ message: "Not authorized" });

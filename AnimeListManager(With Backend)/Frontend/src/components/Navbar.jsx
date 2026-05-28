@@ -1,7 +1,8 @@
 import { useNavigate, useLocation } from "react-router-dom"
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux"
 import toast from "react-hot-toast";
+import { fetchAllAnimes } from "../api/index.js";
 
 const Navbar = () => {
   const navigate = useNavigate()
@@ -17,6 +18,90 @@ const Navbar = () => {
   }, [location]);
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Esc key closes the logout modal
+  useEffect(() => {
+    if (!showLogoutModal) return;
+    const handleKey = (e) => { if (e.key === 'Escape') setShowLogoutModal(false); };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [showLogoutModal]);
+
+  // ── Export state ──
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const exportMenuRef = useRef(null);
+
+  // Close export dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target)) {
+        setShowExportMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Client-side CSV builder — safely quotes fields with commas/quotes
+  const toCSV = (rows) => {
+    const headers = ['Type', 'Name', 'Status', 'Episodes Watched', 'Movies Watched', 'MAL ID', 'Date Added'];
+    const escape = (val) => {
+      const str = val == null ? '' : String(val);
+      return str.includes(',') || str.includes('"') || str.includes('\n')
+        ? `"${str.replace(/"/g, '""')}"` : str;
+    };
+    const lines = [
+      headers.join(','),
+      ...rows.map((r) =>
+        [
+          r.entryType || 'series',
+          r.name,
+          r.status || '',
+          r.episodes ?? 0,
+          r.movies ?? 0,
+          r.malId || '',
+          r.createdAt ? new Date(r.createdAt).toISOString().slice(0, 10) : '',
+        ].map(escape).join(',')
+      ),
+    ];
+    return lines.join('\n');
+  };
+
+  const triggerDownload = (content, filename, mimeType) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExport = async (format) => {
+    setShowExportMenu(false);
+    setExporting(true);
+    try {
+      const { data } = await fetchAllAnimes();
+      const rows = data.data;
+      if (!rows || rows.length === 0) {
+        toast('Your list is empty — nothing to export.', { icon: '📋' });
+        return;
+      }
+      const date = new Date().toISOString().slice(0, 10);
+      if (format === 'csv') {
+        triggerDownload(toCSV(rows), `AnimeList_${date}.csv`, 'text/csv;charset=utf-8;');
+        toast.success(`Exported ${rows.length} entries as CSV ✅`);
+      } else {
+        triggerDownload(JSON.stringify(rows, null, 2), `AnimeList_${date}.json`, 'application/json');
+        toast.success(`Exported ${rows.length} entries as JSON ✅`);
+      }
+    } catch {
+      toast.error('Export failed. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const logout = () => {
     dispatch({ type: "LOGOUT" })
@@ -81,6 +166,44 @@ const Navbar = () => {
             <span className="material-symbols-outlined text-base">share</span>
             <span className="hidden sm:inline">Share</span>
           </button>
+
+          {/* Export Button */}
+          <div className="relative" ref={exportMenuRef}>
+            <button
+              onClick={() => setShowExportMenu((v) => !v)}
+              disabled={exporting}
+              className="flex items-center gap-1 bg-white/10 px-2 sm:px-3 py-1.5 rounded-full text-white text-xs sm:text-sm font-medium hover:bg-white/20 transition disabled:opacity-60"
+              title="Export your list"
+            >
+              {exporting ? (
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
+              ) : (
+                <span className="material-symbols-outlined text-base">download</span>
+              )}
+              <span className="hidden sm:inline">{exporting ? 'Exporting…' : 'Export'}</span>
+            </button>
+
+            {/* Export dropdown */}
+            {showExportMenu && (
+              <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-[fadeIn_0.15s_ease-out]">
+                <button
+                  onClick={() => handleExport('csv')}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                >
+                  <span className="material-symbols-outlined text-base text-[#E67E22]">table_chart</span>
+                  Export as CSV
+                </button>
+                <div className="h-px bg-gray-100" />
+                <button
+                  onClick={() => handleExport('json')}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                >
+                  <span className="material-symbols-outlined text-base text-[#E67E22]">data_object</span>
+                  Export as JSON
+                </button>
+              </div>
+            )}
+          </div>
 
           <button
             onClick={() => setShowLogoutModal(true)}

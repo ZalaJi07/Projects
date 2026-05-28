@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef } from "react";
 import { useSelector } from "react-redux";
 
-const AnimeForm = ({ list, handelChange, saveAnime, setList, currentId, searchResults, handleSearchChange, setSearchResults, activeTab = "series" }) => {
+const AnimeForm = forwardRef(function AnimeForm({ list, handelChange, saveAnime, setList, currentId, searchResults, handleSearchChange, setSearchResults, activeTab = "series" }, ref) {
 
     const anime = useSelector((state) => currentId ? state.entry.animes.find((anime) => anime._id === currentId) : null);
 
@@ -14,6 +14,7 @@ const AnimeForm = ({ list, handelChange, saveAnime, setList, currentId, searchRe
     return (
         <div className="input pb-4 relative">
             <input
+                ref={ref}
                 value={list.name}
                 onChange={(e) => {
                     handleSearchChange(e.target.value);
@@ -116,6 +117,6 @@ const AnimeForm = ({ list, handelChange, saveAnime, setList, currentId, searchRe
             </button>
         </div>
     );
-};
+});
 
 export default AnimeForm;

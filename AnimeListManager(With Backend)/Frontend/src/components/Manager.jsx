@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Navigate } from "react-router-dom";
 import ManagerHeader from "./ManagerHeader";
 import AnimeForm from "./AnimeForm";
@@ -21,8 +21,15 @@ const Manager = () => {
 
   const [currentId, setCurrentId] = useState(null);
 
-  // Tab state: "series" or "movie"
-  const [activeTab, setActiveTab] = useState("series");
+  // Tab state: "series" or "movie" — persisted
+  const [activeTab, setActiveTabState] = useState(() => {
+    const saved = localStorage.getItem("activeTab");
+    return saved === "movie" ? "movie" : "series";
+  });
+  const setActiveTab = (tab) => {
+    setActiveTabState(tab);
+    localStorage.setItem("activeTab", tab);
+  };
 
   // Search, filter, sort, pagination state
   const [page, setPage] = useState(1);
@@ -32,16 +39,52 @@ const Manager = () => {
   const [sortField, setSortField] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
   const searchDebounceRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+  const nameInputRef = useRef(null);
+
+  // Scroll to top when page changes
+  const scrollToTop = useCallback(() => {
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  // Global keyboard shortcut: N = focus add form; ← / → = paginate
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't fire when typing inside any interactive element
+      const tag = document.activeElement?.tagName;
+      const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
+      if ((e.key === 'n' || e.key === 'N') && !isTyping && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        nameInputRef.current?.focus();
+        nameInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      if (e.key === 'ArrowLeft' && !isTyping) {
+        setPage((prev) => Math.max(1, prev - 1));
+        return;
+      }
+
+      if (e.key === 'ArrowRight' && !isTyping) {
+        setPage((prev) => Math.min(totalPages, prev + 1));
+        return;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [totalPages]);
 
   // Fetch animes with current filters + tab type
   useEffect(() => {
     if (user) {
       setLoading(true);
       dispatch(getAnimes(page, 20, listSearch, filterStatus === "All" ? "" : filterStatus, sortField, sortOrder, activeTab))
-        .then(() => setLoading(false))
+        .then(() => { setLoading(false); scrollToTop(); })
         .catch(() => setLoading(false));
     }
-  }, [page, listSearch, filterStatus, sortField, sortOrder, currentId, activeTab, dispatch]);
+  }, [page, listSearch, filterStatus, sortField, sortOrder, currentId, activeTab, dispatch, scrollToTop]);
 
   // Reset to page 1 when search/filter/sort/tab changes
   useEffect(() => {
@@ -116,7 +159,10 @@ const Manager = () => {
   }, [searchTerm, activeTab]);
 
   const saveAnime = async (e) => {
-    if (activeTab === "movie") {
+    // For edits, preserve original entryType; for new entries, use activeTab
+    const entryType = currentId && list.entryType ? list.entryType : (activeTab === "movie" ? "movie" : "series");
+
+    if (entryType === "movie") {
       // Movies only need a name
       if (!list.name) return;
       e.preventDefault();
@@ -159,7 +205,7 @@ const Manager = () => {
   }
 
   return (
-    <div className="flex justify-center bg-[#ECF0F1] flex-grow overflow-auto">
+    <div ref={scrollContainerRef} className="flex justify-center bg-[#ECF0F1] flex-grow overflow-auto">
       <div className="w-[95vw] md:w-[60vw] flex flex-col py-2 px-1 sm:px-0">
         <ManagerHeader />
 
@@ -186,6 +232,7 @@ const Manager = () => {
         </div>
 
         <AnimeForm
+          ref={nameInputRef}
           list={list}
           handelChange={handelChange}
           saveAnime={saveAnime}
@@ -273,26 +320,75 @@ const Manager = () => {
         {/* Table area */}
         <div className="min-h-[60vh] md:min-h-0 overflow-y-auto md:flex-1">
           {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="w-8 h-8 border-4 border-[#E67E22] border-t-transparent rounded-full animate-spin"></div>
+            <div className="space-y-0">
+              {/* Skeleton shimmer rows */}
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3 px-3 py-3 bg-orange-50 border-b border-orange-100 animate-pulse">
+                  <div className="w-8 h-11 rounded bg-orange-200/60 flex-shrink-0"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 bg-orange-200/60 rounded-full w-[60%]"></div>
+                    <div className="h-2.5 bg-orange-200/40 rounded-full w-[35%]"></div>
+                  </div>
+                  <div className="hidden md:flex items-center gap-4">
+                    <div className="h-3 bg-orange-200/40 rounded-full w-16"></div>
+                    <div className="h-3 bg-orange-200/40 rounded-full w-10"></div>
+                    <div className="h-3 bg-orange-200/40 rounded-full w-10"></div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : animes.length === 0 ? (
             <div className="text-center py-16 text-gray-400">
               {listSearch || filterStatus !== "All" ? (
                 <>
-                  <span className="material-symbols-outlined text-6xl text-gray-300 mb-3 block">search_off</span>
+                  <div className="flex justify-center mb-4">
+                    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="50" cy="50" r="30" stroke="#E67E22" strokeWidth="4" strokeOpacity="0.3" fill="#FFF7ED" />
+                      <line x1="72" y1="72" x2="100" y2="100" stroke="#E67E22" strokeWidth="4" strokeLinecap="round" strokeOpacity="0.3" />
+                      <line x1="38" y1="38" x2="62" y2="62" stroke="#E67E22" strokeWidth="3" strokeLinecap="round" strokeOpacity="0.5" />
+                      <line x1="62" y1="38" x2="38" y2="62" stroke="#E67E22" strokeWidth="3" strokeLinecap="round" strokeOpacity="0.5" />
+                    </svg>
+                  </div>
                   <p className="text-lg font-semibold text-gray-500">No results found</p>
                   <p className="text-sm mt-1">Try a different search or filter</p>
                 </>
               ) : activeTab === "movie" ? (
                 <>
-                  <span className="material-symbols-outlined text-6xl text-orange-200 mb-3 block">movie</span>
+                  <div className="flex justify-center mb-4">
+                    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="20" y="25" width="80" height="60" rx="8" fill="#FFF7ED" stroke="#E67E22" strokeWidth="3" strokeOpacity="0.4" />
+                      <rect x="25" y="30" width="10" height="10" rx="2" fill="#E67E22" fillOpacity="0.2" />
+                      <rect x="25" y="45" width="10" height="10" rx="2" fill="#E67E22" fillOpacity="0.2" />
+                      <rect x="25" y="60" width="10" height="10" rx="2" fill="#E67E22" fillOpacity="0.2" />
+                      <rect x="85" y="30" width="10" height="10" rx="2" fill="#E67E22" fillOpacity="0.2" />
+                      <rect x="85" y="45" width="10" height="10" rx="2" fill="#E67E22" fillOpacity="0.2" />
+                      <rect x="85" y="60" width="10" height="10" rx="2" fill="#E67E22" fillOpacity="0.2" />
+                      <polygon points="52,42 52,68 72,55" fill="#E67E22" fillOpacity="0.4" />
+                      <circle cx="85" cy="95" r="12" fill="#FFF7ED" stroke="#E67E22" strokeWidth="2" strokeOpacity="0.3" />
+                      <rect x="81" y="85" width="8" height="5" rx="1" fill="#E67E22" fillOpacity="0.3" />
+                      <circle cx="82" cy="93" r="1.5" fill="#E67E22" fillOpacity="0.4" />
+                      <circle cx="88" cy="93" r="1.5" fill="#E67E22" fillOpacity="0.4" />
+                      <circle cx="85" cy="97" r="1.5" fill="#E67E22" fillOpacity="0.4" />
+                    </svg>
+                  </div>
                   <p className="text-lg font-semibold text-gray-500">No movies yet</p>
                   <p className="text-sm mt-1">Search and add your favorite anime movies above! 🍿</p>
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined text-6xl text-orange-200 mb-3 block">library_add</span>
+                  <div className="flex justify-center mb-4">
+                    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="30" y="40" width="50" height="65" rx="4" fill="#FDBA74" fillOpacity="0.15" stroke="#E67E22" strokeWidth="2.5" strokeOpacity="0.3" transform="rotate(-6 30 40)" />
+                      <rect x="35" y="35" width="50" height="65" rx="4" fill="#FFF7ED" stroke="#E67E22" strokeWidth="2.5" strokeOpacity="0.4" />
+                      <line x1="45" y1="50" x2="75" y2="50" stroke="#E67E22" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.3" />
+                      <line x1="45" y1="58" x2="70" y2="58" stroke="#E67E22" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.2" />
+                      <line x1="45" y1="66" x2="72" y2="66" stroke="#E67E22" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.2" />
+                      <line x1="45" y1="74" x2="65" y2="74" stroke="#E67E22" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.15" />
+                      <circle cx="85" cy="35" r="16" fill="#FFF7ED" stroke="#E67E22" strokeWidth="2.5" strokeOpacity="0.4" />
+                      <line x1="85" y1="28" x2="85" y2="42" stroke="#E67E22" strokeWidth="2.5" strokeLinecap="round" strokeOpacity="0.4" />
+                      <line x1="78" y1="35" x2="92" y2="35" stroke="#E67E22" strokeWidth="2.5" strokeLinecap="round" strokeOpacity="0.4" />
+                    </svg>
+                  </div>
                   <p className="text-lg font-semibold text-gray-500">Your anime list is empty</p>
                   <p className="text-sm mt-1">Start building your collection — add your first anime above! ✨</p>
                 </>
@@ -308,29 +404,81 @@ const Manager = () => {
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 py-3 flex-shrink-0">
-            <button
-              onClick={() => setPage(Math.max(1, page - 1))}
-              disabled={page === 1}
-              className="px-3 py-1 text-sm rounded-lg border border-gray-300 hover:border-[#E67E22] 
-                       disabled:opacity-40 disabled:cursor-not-allowed transition"
-            >
-              ← Prev
-            </button>
-            <span className="text-sm text-gray-600">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => setPage(Math.min(totalPages, page + 1))}
-              disabled={page === totalPages}
-              className="px-3 py-1 text-sm rounded-lg border border-gray-300 hover:border-[#E67E22] 
-                       disabled:opacity-40 disabled:cursor-not-allowed transition"
-            >
-              Next →
-            </button>
-          </div>
-        )}
+        {totalPages > 1 && (() => {
+          const buildPages = (current, total) => {
+            if (total <= 5) {
+              // Show all pages — no ellipsis needed
+              return Array.from({ length: total }, (_, i) => i + 1);
+            }
+
+            // Always include: first, last, current, and neighbours
+            const core = new Set([
+              1,
+              total,
+              current,
+              current - 1,
+              current + 1,
+            ]);
+
+            // If we have fewer than 4 unique pages, pad outward
+            if (core.size < 4) {
+              for (let p = 2; core.size < 4 && p < total; p++) core.add(p);
+            }
+
+            // Sort and insert ellipsis where gap > 1
+            const sorted = [...core].filter(p => p >= 1 && p <= total).sort((a, b) => a - b);
+            const items = [];
+            for (let i = 0; i < sorted.length; i++) {
+              if (i > 0 && sorted[i] - sorted[i - 1] > 1) items.push("...");
+              items.push(sorted[i]);
+            }
+            return items;
+          };
+
+          const items = buildPages(currentPage, totalPages);
+
+          return (
+            <div className="flex justify-center items-center gap-1.5 py-3 flex-shrink-0">
+              <button
+                onClick={() => setPage(Math.max(1, page - 1))}
+                disabled={page === 1}
+                className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-300 
+                 hover:border-[#E67E22] hover:bg-orange-50 disabled:opacity-40 disabled:cursor-not-allowed transition text-sm"
+              >
+                <span className="material-symbols-outlined text-base">chevron_left</span>
+              </button>
+
+              {items.map((item, idx) =>
+                item === "..." ? (
+                  <span key={`ellipsis-${idx}`} className="w-9 h-9 flex items-center justify-center text-sm text-gray-400">
+                    ···
+                  </span>
+                ) : (
+                  <button
+                    key={item}
+                    onClick={() => setPage(item)}
+                    className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition
+              ${currentPage === item
+                        ? "bg-[#E67E22] text-white shadow-sm"
+                        : "border border-gray-300 text-gray-600 hover:border-[#E67E22] hover:bg-orange-50"
+                      }`}
+                  >
+                    {item}
+                  </button>
+                )
+              )}
+
+              <button
+                onClick={() => setPage(Math.min(totalPages, page + 1))}
+                disabled={page === totalPages}
+                className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-300 
+                 hover:border-[#E67E22] hover:bg-orange-50 disabled:opacity-40 disabled:cursor-not-allowed transition text-sm"
+              >
+                <span className="material-symbols-outlined text-base">chevron_right</span>
+              </button>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

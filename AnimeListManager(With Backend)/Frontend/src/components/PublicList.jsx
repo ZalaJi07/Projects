@@ -187,7 +187,70 @@ const PublicList = () => {
                 </div>
 
                 {/* Pagination */}
-                {totalPages > 1 && (
+                {totalPages > 1 && (() => {
+                    // Build page numbers: always show first, last, and pages around current
+                    const pages = [];
+                    const addPage = (p) => { if (!pages.includes(p)) pages.push(p); };
+
+                    addPage(1);
+                    addPage(totalPages);
+                    for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
+                        addPage(i);
+                    }
+                    pages.sort((a, b) => a - b);
+
+                    // Insert ellipsis markers
+                    const items = [];
+                    for (let i = 0; i < pages.length; i++) {
+                        if (i > 0 && pages[i] - pages[i - 1] > 1) {
+                            items.push("...");
+                        }
+                        items.push(pages[i]);
+                    }
+
+                    return (
+                        <div className="flex justify-center items-center gap-1.5 py-3 flex-shrink-0">
+                            <button
+                                onClick={() => setPage(Math.max(1, page - 1))}
+                                disabled={page === 1}
+                                className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-300 
+                         hover:border-[#E67E22] hover:bg-orange-50 disabled:opacity-40 disabled:cursor-not-allowed transition text-sm"
+                            >
+                                <span className="material-symbols-outlined text-base">chevron_left</span>
+                            </button>
+
+                            {items.map((item, idx) =>
+                                item === "..." ? (
+                                    <span key={`ellipsis-${idx}`} className="w-9 h-9 flex items-center justify-center text-sm text-gray-400">
+                                        ···
+                                    </span>
+                                ) : (
+                                    <button
+                                        key={item}
+                                        onClick={() => setPage(item)}
+                                        className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition
+                      ${page === item
+                                                ? "bg-[#E67E22] text-white shadow-sm"
+                                                : "border border-gray-300 text-gray-600 hover:border-[#E67E22] hover:bg-orange-50"
+                                            }`}
+                                    >
+                                        {item}
+                                    </button>
+                                )
+                            )}
+
+                            <button
+                                onClick={() => setPage(Math.min(totalPages, page + 1))}
+                                disabled={page === totalPages}
+                                className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-300 
+                         hover:border-[#E67E22] hover:bg-orange-50 disabled:opacity-40 disabled:cursor-not-allowed transition text-sm"
+                            >
+                                <span className="material-symbols-outlined text-base">chevron_right</span>
+                            </button>
+                        </div>
+                    );
+                })()}
+                {/* {totalPages > 1 && (
                     <div className="flex justify-center items-center gap-2 py-3 flex-shrink-0">
                         <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}
                             className="px-3 py-1 text-sm rounded-lg border border-gray-300 hover:border-[#E67E22] disabled:opacity-40 disabled:cursor-not-allowed transition">
@@ -199,7 +262,7 @@ const PublicList = () => {
                             Next →
                         </button>
                     </div>
-                )}
+                )} */}
             </div>
         </div>
     );

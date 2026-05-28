@@ -5,6 +5,13 @@ import { getAnimeDetails } from "../utils/jikanCache.js";
 
 // ── Delete Confirmation Modal ──
 const DeleteConfirmModal = ({ item, onConfirm, onCancel }) => {
+  // Esc key closes the modal
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onCancel(); };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onCancel]);
+
   if (!item) return null;
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onCancel}>
@@ -43,9 +50,11 @@ const DeleteConfirmModal = ({ item, onConfirm, onCancel }) => {
 
 const AnimeImage = ({ malId, size = "sm" }) => {
   const [imageUrl, setImageUrl] = useState(null);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     if (malId) {
+      setImgError(false);
       getAnimeDetails(malId).then((details) => {
         if (details) setImageUrl(details.images?.jpg?.small_image_url);
       });
@@ -54,20 +63,27 @@ const AnimeImage = ({ malId, size = "sm" }) => {
 
   const sizeClass = size === "md" ? "w-12 h-16" : "w-8 h-11";
 
-  if (!malId || !imageUrl) {
+  if (!malId || !imageUrl || imgError) {
     return (
       <div className={`${sizeClass} rounded bg-gray-200 flex items-center justify-center text-xs text-gray-400`}>
-        ?
+        <span className="material-symbols-outlined text-sm">image</span>
       </div>
     );
   }
 
-  return <img src={imageUrl} alt="" className={`${sizeClass} rounded object-cover shadow-sm`} />;
+  return <img src={imageUrl} alt="" className={`${sizeClass} rounded object-cover shadow-sm`} onError={() => setImgError(true)} />;
 };
 
 const AnimeDetailModal = ({ anime, onClose }) => {
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Esc key closes the modal
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose]);
 
   useEffect(() => {
     if (anime?.malId) {

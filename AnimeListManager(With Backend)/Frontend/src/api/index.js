@@ -19,11 +19,16 @@ API.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            localStorage.removeItem('profile');
-            toast.error("Session expired. Please log in again.", { id: "session-expired" });
-            setTimeout(() => {
-                window.location.href = '/auth';
-            }, 1500);
+            // Don't auto-logout for auth routes (wrong password etc.) or if already on auth page
+            const url = error.config?.url || '';
+            const isAuthRoute = url.includes('/user/signin') || url.includes('/user/signup') || url.includes('/user/googleSignIn');
+            if (!isAuthRoute && window.location.pathname !== '/auth') {
+                localStorage.removeItem('profile');
+                toast.error("Session expired. Please log in again.", { id: "session-expired" });
+                setTimeout(() => {
+                    window.location.href = '/auth';
+                }, 1500);
+            }
         }
         return Promise.reject(error);
     }
@@ -32,6 +37,7 @@ API.interceptors.response.use(
 // Anime API (per-user, authenticated, with pagination/search/filter/sort)
 export const fetchAnimes = (page = 1, limit = 20, search = '', status = '', sort = 'createdAt', order = 'desc', entryType = 'series') =>
     API.get(`/userAnime?page=${page}&limit=${limit}&search=${search}&status=${status}&sort=${sort}&order=${order}&entryType=${entryType}`);
+export const fetchAllAnimes = () => API.get('/userAnime/all');   // for export — no pagination
 export const createAnime = (newAnime) => API.post("/userAnime", newAnime);
 export const updateAnime = (id, updatedAnime) => API.patch(`/userAnime/${id}`, updatedAnime);
 export const deleteAnime = (id) => API.delete(`/userAnime/${id}`);
