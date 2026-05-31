@@ -15,27 +15,40 @@ export const getAnime = async (req, res) => {
         } else {
             filter.entryType = entryType;
         }
-        if (search) filter.name = { $regex: search, $options: 'i' }; // case-insensitive search
+        if (search) filter.name = { $regex: search, $options: 'i' };
         if (status && status !== 'All') filter.status = status;
 
-        // Sort config
         const sortOrder = order === 'asc' ? 1 : -1;
-        const sortConfig = { [sort]: sortOrder };
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
 
-        const total = await UserAnime.countDocuments(filter);
-        const animeRows = await UserAnime.find(filter)
-            .sort(sortConfig)
-            .skip((parseInt(page) - 1) * parseInt(limit))
-            .limit(parseInt(limit));
+        // Issue 5 fix: single $facet aggregation replaces two separate DB calls
+        // (countDocuments + find). Both the data slice and the total count are
+        // computed in one round-trip, halving DB load per page navigation.
+        const [result] = await UserAnime.aggregate([
+            { $match: filter },
+            {
+                $facet: {
+                    data: [
+                        { $sort: { [sort]: sortOrder } },
+                        { $skip: (pageNum - 1) * limitNum },
+                        { $limit: limitNum },
+                    ],
+                    total: [{ $count: 'count' }],
+                },
+            },
+        ]);
+
+        const total = result?.total[0]?.count ?? 0;
 
         res.status(200).json({
-            data: animeRows,
-            currentPage: parseInt(page),
-            totalPages: Math.ceil(total / parseInt(limit)),
+            data: result?.data ?? [],
+            currentPage: pageNum,
+            totalPages: Math.max(1, Math.ceil(total / limitNum)),
             totalItems: total,
         });
     } catch (error) {
-        res.status(404).json({ message: error.message });
+        res.status(500).json({ message: error.message });
     }
 };
 

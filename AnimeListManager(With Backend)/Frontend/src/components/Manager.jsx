@@ -29,6 +29,15 @@ const Manager = () => {
   const setActiveTab = (tab) => {
     setActiveTabState(tab);
     localStorage.setItem("activeTab", tab);
+    // Reset all tab-dependent state in one call so React 18 batches it
+    // into a single re-render → a single fetch (Issue 3 fix).
+    setList({ name: "", status: "", episodes: "", movies: "", malId: null });
+    setCurrentId(null);
+    setSearchResults([]);
+    setFilterStatus("All");
+    setListSearch("");
+    setListSearchDisplay("");
+    setPage(1);
   };
 
   // Search, filter, sort, pagination state
@@ -84,22 +93,17 @@ const Manager = () => {
         .then(() => { setLoading(false); scrollToTop(); })
         .catch(() => setLoading(false));
     }
-  }, [page, listSearch, filterStatus, sortField, sortOrder, currentId, activeTab, dispatch, scrollToTop]);
+  }, [page, listSearch, filterStatus, sortField, sortOrder, activeTab, dispatch, scrollToTop]);
 
-  // Reset to page 1 when search/filter/sort/tab changes
-  useEffect(() => {
-    setPage(1);
-  }, [listSearch, filterStatus, sortField, sortOrder, activeTab]);
+  // (Tab-reset and page-reset effects removed — see setActiveTab above for Issue 3 fix)
 
-  // Reset form when switching tabs
+  // Issue 7 fix: if the current page is empty (e.g. user deleted the last item on
+  // this page) and we are not on page 1, step back so the user lands on real data.
   useEffect(() => {
-    setList({ name: "", status: "", episodes: "", movies: "", malId: null });
-    setCurrentId(null);
-    setSearchResults([]);
-    setFilterStatus("All");
-    setListSearch("");
-    setListSearchDisplay("");
-  }, [activeTab]);
+    if (!loading && animes.length === 0 && page > 1) {
+      setPage((prev) => Math.max(1, prev - 1));
+    }
+  }, [animes.length, page, loading]);
 
   // Debounced list search
   const handleListSearchChange = (e) => {
@@ -107,7 +111,9 @@ const Manager = () => {
     const value = e.target.value;
     setListSearchDisplay(value);
     searchDebounceRef.current = setTimeout(() => {
+      // Both updates batch in one render (React 18) → one fetch (Issue 3 fix)
       setListSearch(value);
+      setPage(1);
     }, 400);
   };
 
@@ -186,7 +192,13 @@ const Manager = () => {
       }
     }
     setList({ name: "", status: "", episodes: "", movies: "", malId: null });
-    dispatch(getAnimes(page, 20, listSearch, filterStatus === "All" ? "" : filterStatus, sortField, sortOrder, activeTab));
+
+    // Issue 1 fix: for updates the reducer already applied the change locally
+    // (via the UPDATE action), so no re-fetch is needed.
+    // For creates, re-fetch to get the correct server-side sort order.
+    if (!currentId) {
+      dispatch(getAnimes(page, 20, listSearch, filterStatus === "All" ? "" : filterStatus, sortField, sortOrder, activeTab));
+    }
   };
 
   const handelChange = (e) => setList({ ...list, [e.target.name]: e.target.value });
@@ -198,6 +210,7 @@ const Manager = () => {
       setSortField(field);
       setSortOrder("asc");
     }
+    setPage(1); // Issue 3 fix: reset page on sort change
   };
 
   if (!user) {
@@ -267,7 +280,7 @@ const Manager = () => {
               <span className="material-symbols-outlined text-[#E67E22] text-xl">filter_alt</span>
               <select
                 value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
+                onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
                 className="border border-gray-300 bg-white rounded-lg px-2 sm:px-3 py-1.5 text-sm
                        shadow-sm hover:border-[#E67E22] focus:outline-none focus:ring-2 
                        focus:ring-[#E67E22] transition"

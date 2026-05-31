@@ -1,7 +1,8 @@
 import { useDispatch } from "react-redux";
 import { deleteAnime, increaseEp, decreaseEp } from "../actions/entry.js";
-import { useState, useEffect } from "react";
-import { getAnimeDetails } from "../utils/jikanCache.js";
+import { UPDATE } from "../constants/actionTypes.js";
+import { useState, useEffect, useRef } from "react";
+import { getAnimeDetails, getImageUrl } from "../utils/jikanCache.js";
 
 // ── Delete Confirmation Modal ──
 const DeleteConfirmModal = ({ item, onConfirm, onCancel }) => {
@@ -55,8 +56,10 @@ const AnimeImage = ({ malId, size = "sm" }) => {
   useEffect(() => {
     if (malId) {
       setImgError(false);
-      getAnimeDetails(malId).then((details) => {
-        if (details) setImageUrl(details.images?.jpg?.small_image_url);
+      // getImageUrl resolves instantly from the compact localStorage cache;
+      // only hits Jikan on a cold start or after 30-day expiry.
+      getImageUrl(malId).then((url) => {
+        if (url) setImageUrl(url);
       });
     }
   }, [malId]);
@@ -167,7 +170,7 @@ const StatusBadge = ({ status }) => {
 };
 
 // ── Mobile card layout ──
-const AnimeCard = ({ item, readOnly, setCurrentId, dispatch, onSelect, onDelete, mode }) => {
+const AnimeCard = ({ item, readOnly, setCurrentId, onEpChange, onSelect, onDelete, mode }) => {
   const isMovie = mode === "movie";
 
   return (
@@ -192,12 +195,12 @@ const AnimeCard = ({ item, readOnly, setCurrentId, dispatch, onSelect, onDelete,
                   <div className="flex items-center gap-1">
                     <span
                       className="material-symbols-outlined text-sm cursor-pointer hover:text-[#E67E22]"
-                      onClick={() => dispatch(decreaseEp(item._id))}
+                      onClick={() => onEpChange(item, -1)}
                     >remove</span>
                     <span className="font-semibold min-w-[1.5rem] text-center">{item.episodes}</span>
                     <span
                       className="material-symbols-outlined text-sm cursor-pointer hover:text-[#E67E22]"
-                      onClick={() => dispatch(increaseEp(item._id))}
+                      onClick={() => onEpChange(item, 1)}
                     >add</span>
                   </div>
                 )}
@@ -224,7 +227,7 @@ const AnimeCard = ({ item, readOnly, setCurrentId, dispatch, onSelect, onDelete,
 };
 
 // ── Desktop table row for Series ──
-const SeriesRow = ({ item, readOnly, setCurrentId, dispatch, onSelect, onDelete }) => (
+const SeriesRow = ({ item, readOnly, setCurrentId, onEpChange, onSelect, onDelete }) => (
   <tr className="hover:bg-orange-200 transition cursor-pointer" onClick={() => onSelect(item)}>
     <td className="text-center border border-white py-1 px-1 w-[2.8rem]">
       <AnimeImage malId={item.malId} />
@@ -240,9 +243,9 @@ const SeriesRow = ({ item, readOnly, setCurrentId, dispatch, onSelect, onDelete 
         item.episodes
       ) : (
         <div className={`flex items-center ${(item.status !== "Dropped" && item.status !== "Finished") ? "justify-between" : "justify-center"}`}>
-          {(item.status !== "Dropped" && item.status !== "Finished") ? <span className="material-symbols-outlined cursor-pointer" onClick={() => dispatch(decreaseEp(item._id))}>remove</span> : null}
+          {(item.status !== "Dropped" && item.status !== "Finished") ? <span className="material-symbols-outlined cursor-pointer" onClick={() => onEpChange(item, -1)}>remove</span> : null}
           {item.episodes}
-          {(item.status !== "Dropped" && item.status !== "Finished") ? <span className="material-symbols-outlined cursor-pointer" onClick={() => dispatch(increaseEp(item._id))}>add</span> : null}
+          {(item.status !== "Dropped" && item.status !== "Finished") ? <span className="material-symbols-outlined cursor-pointer" onClick={() => onEpChange(item, 1)}>add</span> : null}
         </div>
       )}
     </td>
@@ -285,6 +288,52 @@ const AnimeTable = ({ animes, setCurrentId, readOnly = false, mode = "series" })
   const [selectedAnime, setSelectedAnime] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const isMovie = mode === "movie";
+
+  // ── Optimistic episode counter with debounced sequential server sync ──
+  // epInitialRef: episode count BEFORE the current debounce window started.
+  //               Cleared when the debounce fires so the next click starts fresh.
+  // epTargetsRef: the latest optimistic target count during rapid clicking.
+  // epTimersRef:  one debounce timer per anime id.
+  const epInitialRef = useRef({});
+  const epTargetsRef = useRef({});
+  const epTimersRef = useRef({});
+
+  // Cleanup all pending timers on unmount
+  useEffect(() => {
+    return () => { Object.values(epTimersRef.current).forEach(clearTimeout); };
+  }, []);
+
+  const handleEpChange = (item, delta) => {
+    // Record the baseline BEFORE any pending optimistic changes in this window.
+    if (epInitialRef.current[item._id] === undefined) {
+      epInitialRef.current[item._id] = item.episodes;
+    }
+
+    const current = epTargetsRef.current[item._id] ?? item.episodes;
+    const newCount = Math.max(0, current + delta);
+    epTargetsRef.current[item._id] = newCount;
+
+    // Optimistic: update Redux state immediately so the UI responds at once.
+    dispatch({ type: UPDATE, payload: { ...item, episodes: newCount } });
+
+    // Debounce: after 700ms of inactivity, sync the total delta to the server
+    // using the proven increaseEp/decreaseEp endpoints, called sequentially
+    // so each server read sees the result of the previous write (no race condition).
+    clearTimeout(epTimersRef.current[item._id]);
+    epTimersRef.current[item._id] = setTimeout(async () => {
+      const initial = epInitialRef.current[item._id];
+      const target = epTargetsRef.current[item._id];
+      delete epInitialRef.current[item._id];
+      delete epTargetsRef.current[item._id];
+
+      const totalDelta = target - initial;
+      if (totalDelta > 0) {
+        for (let i = 0; i < totalDelta; i++) await dispatch(increaseEp(item._id));
+      } else if (totalDelta < 0) {
+        for (let i = 0; i < Math.abs(totalDelta); i++) await dispatch(decreaseEp(item._id));
+      }
+    }, 700);
+  };
 
   const handleDelete = (item) => setDeleteTarget(item);
   const confirmDeleteAction = () => {
@@ -334,7 +383,7 @@ const AnimeTable = ({ animes, setCurrentId, readOnly = false, mode = "series" })
                 item={item}
                 readOnly={readOnly}
                 setCurrentId={setCurrentId}
-                dispatch={dispatch}
+                onEpChange={handleEpChange}
                 onSelect={setSelectedAnime}
                 onDelete={handleDelete}
               />
@@ -351,7 +400,7 @@ const AnimeTable = ({ animes, setCurrentId, readOnly = false, mode = "series" })
             item={item}
             readOnly={readOnly}
             setCurrentId={setCurrentId}
-            dispatch={dispatch}
+            onEpChange={handleEpChange}
             onSelect={setSelectedAnime}
             onDelete={handleDelete}
             mode={mode}

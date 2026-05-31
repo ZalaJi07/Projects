@@ -1,4 +1,4 @@
-import { FETCHALL, CREATE, UPDATE, DELETE, INCREASE_EP, DECREASE_EP  } from '../constants/actionTypes'
+import { FETCHALL, CREATE, UPDATE, DELETE, INCREASE_EP, DECREASE_EP } from '../constants/actionTypes'
 import * as api from '../api'
 import toast from 'react-hot-toast'
 

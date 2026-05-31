@@ -23,8 +23,17 @@ export default (state = initialState, action) => {
         case INCREASE_EP:
         case UPDATE:
             return { ...state, animes: state.animes.map((anime) => (anime._id === action.payload._id ? action.payload : anime)) };
-        case DELETE:
-            return { ...state, animes: state.animes.filter((anime) => anime._id !== action.payload), totalItems: state.totalItems - 1 };
+        case DELETE: {
+            const newTotal = Math.max(0, state.totalItems - 1);
+            return {
+                ...state,
+                animes: state.animes.filter((anime) => anime._id !== action.payload),
+                totalItems: newTotal,
+                // Recalculate so the pagination bar never shows a page that no longer exists.
+                // Page size is fixed at 20 throughout the app.
+                totalPages: Math.max(1, Math.ceil(newTotal / 20)),
+            };
+        }
         case 'LOGOUT':
             return initialState;
         default:
