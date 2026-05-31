@@ -9,12 +9,15 @@ const Navbar = () => {
   const location = useLocation()
   const dispatch = useDispatch()
   const [user, setUser] = useState(JSON.parse(localStorage.getItem("profile"))?.result?.username);
+  const [isAdmin, setIsAdmin] = useState(JSON.parse(localStorage.getItem("profile"))?.result?.isAdmin || false);
 
   // Hide personal controls when viewing someone else's public list
   const isPublicListView = location.pathname.startsWith("/list/");
 
   useEffect(() => {
-    setUser(JSON.parse(localStorage.getItem("profile"))?.result?.username);
+    const profile = JSON.parse(localStorage.getItem("profile"));
+    setUser(profile?.result?.username);
+    setIsAdmin(profile?.result?.isAdmin || false);
   }, [location]);
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -166,6 +169,18 @@ const Navbar = () => {
             <span className="material-symbols-outlined text-base">share</span>
             <span className="hidden sm:inline">Share</span>
           </button>
+
+          {/* Admin link — only visible to the admin account */}
+          {isAdmin && (
+            <button
+              onClick={() => navigate('/admin')}
+              className="flex items-center gap-1 bg-white/10 px-2 sm:px-3 py-1.5 rounded-full text-white text-xs sm:text-sm font-medium hover:bg-white/20 transition"
+              title="Admin dashboard"
+            >
+              <span className="material-symbols-outlined text-base">admin_panel_settings</span>
+              <span className="hidden sm:inline">Admin</span>
+            </button>
+          )}
 
           {/* Export Button */}
           <div className="relative" ref={exportMenuRef}>

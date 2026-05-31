@@ -52,3 +52,9 @@ export const googleSignIn = (token) => API.post("/user/googleSignIn", { token })
 // Public list API (no auth needed)
 export const fetchPublicList = (username, page = 1, limit = 20, search = '', status = '', sort = 'createdAt', order = 'desc', entryType = 'series') =>
     API.get(`/list/${username}?page=${page}&limit=${limit}&search=${search}&status=${status}&sort=${sort}&order=${order}&entryType=${entryType}`);
+
+// Admin API (admin-only, blocked server-side for non-admins)
+export const adminFetchUsers = (page = 1, limit = 20, search = '') =>
+    API.get(`/admin/users?page=${page}&limit=${limit}&search=${search}`);
+export const adminDisableUser = (id) => API.patch(`/admin/users/${id}/disable`);
+export const adminRemoveUser = (id) => API.delete(`/admin/users/${id}`);

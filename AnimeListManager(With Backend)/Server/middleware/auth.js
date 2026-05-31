@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import User from "../models/user.js";
 
 const auth = async (req, res, next) => {
     try {
@@ -14,17 +15,34 @@ const auth = async (req, res, next) => {
         if (token && isCodedAuth) {
             decodedData = jwt.verify(token, process.env.JWT_SECRET);
             req.userId = decodedData?.id;
+            req.isAdmin = decodedData?.isAdmin || false;
         } else {
             decodedData = jwt.decode(token);
             req.userId = decodedData?.sub;
+            req.isAdmin = false;
         }
 
         next();
     } catch (error) {
         console.log(error);
-        // If auth fails, return 401 to prevent request hanging
         res.status(401).json({ message: "Unauthenticated" });
     }
 }
+
+// Secondary guard — DB-backed admin check so no crafted JWT can bypass it
+export const requireAdmin = async (req, res, next) => {
+    try {
+        if (!req.userId) return res.status(401).json({ message: "Unauthenticated" });
+
+        const user = await User.findById(req.userId).select("isAdmin");
+        if (!user || !user.isAdmin) {
+            return res.status(403).json({ message: "Access denied. Admins only." });
+        }
+
+        next();
+    } catch (error) {
+        res.status(403).json({ message: "Access denied." });
+    }
+};
 
 export default auth;

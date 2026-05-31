@@ -8,6 +8,7 @@ import entryRoutes from "./routs/entry.js";
 import userRoutes from "./routs/users.js";
 import userAnimeRoutes from "./routs/userAnime.js";
 import publicListRoutes from "./routs/publicList.js";
+import adminRoutes from "./routs/admin.js";
 
 const app = express();
 dotenv.config();
@@ -21,6 +22,7 @@ app.use("/anime", entryRoutes);
 app.use("/user", userRoutes);
 app.use("/userAnime", userAnimeRoutes);
 app.use("/list", publicListRoutes);
+app.use("/admin", adminRoutes);
 
 app.get("/", (req, res) => {
   res.send("Anime List Manager is running...");

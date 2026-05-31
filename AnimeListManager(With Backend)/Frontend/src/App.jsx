@@ -7,6 +7,8 @@ import Navbar from './components/Navbar'
 import Auth from './components/auth/auth.jsx'
 import PublicList from './components/PublicList'
 import ServerWakeUp from './components/ServerWakeUp'
+import AdminRoute from './components/AdminRoute'
+import AdminDashboard from './pages/AdminDashboard'
 
 function App() {
 
@@ -37,6 +39,7 @@ function App() {
             <Route path="/" element={<Manager />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/list/:username" element={<PublicList />} />
+            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           </Routes>
           <Footer />
         </div>
