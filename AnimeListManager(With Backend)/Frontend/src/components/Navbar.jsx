@@ -35,6 +35,10 @@ const Navbar = () => {
   const [exporting, setExporting] = useState(false);
   const exportMenuRef = useRef(null);
 
+  // ── Mobile overflow menu state ──
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const mobileMenuRef = useRef(null);
+
   // Close export dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -46,7 +50,24 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Client-side CSV builder — safely quotes fields with commas/quotes
+  // Close mobile menu when clicking outside or pressing Escape
+  useEffect(() => {
+    if (!showMobileMenu) return;
+    const handleClick = (e) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target)) {
+        setShowMobileMenu(false);
+      }
+    };
+    const handleKey = (e) => { if (e.key === 'Escape') setShowMobileMenu(false); };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [showMobileMenu]);
+
+  // Client-side CSV builder
   const toCSV = (rows) => {
     const headers = ['Type', 'Name', 'Status', 'Episodes Watched', 'Movies Watched', 'MAL ID', 'Date Added'];
     const escape = (val) => {
@@ -83,6 +104,7 @@ const Navbar = () => {
 
   const handleExport = async (format) => {
     setShowExportMenu(false);
+    setShowMobileMenu(false);
     setExporting(true);
     try {
       const { data } = await fetchAllAnimes();
@@ -107,12 +129,13 @@ const Navbar = () => {
   };
 
   const logout = () => {
-    dispatch({ type: "LOGOUT" })
+    dispatch({ type: "LOGOUT" });
     toast.success("Logged out successfully.");
     setShowLogoutModal(false);
-    navigate("/")
-    setUser(null)
-  }
+    setShowMobileMenu(false);
+    navigate("/");
+    setUser(null);
+  };
 
   const shareList = () => {
     const url = `${window.location.origin}/list/${user}`;
@@ -121,7 +144,8 @@ const Navbar = () => {
     }).catch(() => {
       toast("Your public list: " + url, { duration: 5000 });
     });
-  }
+    setShowMobileMenu(false);
+  };
 
   return (
     <>
@@ -152,80 +176,178 @@ const Navbar = () => {
         </div>
       ) : user ? (
         <div className="flex items-center gap-2 sm:gap-3 text-white">
+
           {/* Avatar */}
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#E67E22] flex items-center justify-center font-bold uppercase text-sm sm:text-base">
             {user[0]}
           </div>
 
-          {/* Name - hidden on very small screens */}
+          {/* Username — hidden on mobile */}
           <span className="font-medium hidden sm:inline">{user}</span>
 
-          {/* Share Button */}
-          <button
-            onClick={shareList}
-            className="flex items-center gap-1 bg-white/10 px-2 sm:px-3 py-1.5 rounded-full text-white text-xs sm:text-sm font-medium hover:bg-white/20 transition"
-            title="Copy share link"
-          >
-            <span className="material-symbols-outlined text-base">share</span>
-            <span className="hidden sm:inline">Share</span>
-          </button>
+          {/* ── Desktop buttons — hidden below sm ── */}
+          <div className="hidden sm:flex items-center gap-2">
 
-          {/* Admin link — only visible to the admin account */}
-          {isAdmin && (
             <button
-              onClick={() => navigate('/admin')}
-              className="flex items-center gap-1 bg-white/10 px-2 sm:px-3 py-1.5 rounded-full text-white text-xs sm:text-sm font-medium hover:bg-white/20 transition"
-              title="Admin dashboard"
+              onClick={shareList}
+              className="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full text-white text-sm font-medium hover:bg-white/20 transition"
+              title="Copy share link"
             >
-              <span className="material-symbols-outlined text-base">admin_panel_settings</span>
-              <span className="hidden sm:inline">Admin</span>
+              <span className="material-symbols-outlined text-base">share</span>
+              Share
             </button>
-          )}
 
-          {/* Export Button */}
-          <div className="relative" ref={exportMenuRef}>
             <button
-              onClick={() => setShowExportMenu((v) => !v)}
-              disabled={exporting}
-              className="flex items-center gap-1 bg-white/10 px-2 sm:px-3 py-1.5 rounded-full text-white text-xs sm:text-sm font-medium hover:bg-white/20 transition disabled:opacity-60"
-              title="Export your list"
+              onClick={() => navigate('/calendar')}
+              className="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full text-white text-sm font-medium hover:bg-white/20 transition"
+              title="Airing calendar"
             >
-              {exporting ? (
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
-              ) : (
-                <span className="material-symbols-outlined text-base">download</span>
-              )}
-              <span className="hidden sm:inline">{exporting ? 'Exporting…' : 'Export'}</span>
+              <span className="material-symbols-outlined text-base">calendar_month</span>
+              Calendar
             </button>
+
+            {isAdmin && (
+              <button
+                onClick={() => navigate('/admin')}
+                className="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full text-white text-sm font-medium hover:bg-white/20 transition"
+                title="Admin dashboard"
+              >
+                <span className="material-symbols-outlined text-base">admin_panel_settings</span>
+                Admin
+              </button>
+            )}
 
             {/* Export dropdown */}
-            {showExportMenu && (
-              <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-[fadeIn_0.15s_ease-out]">
+            <div className="relative" ref={exportMenuRef}>
+              <button
+                onClick={() => setShowExportMenu((v) => !v)}
+                disabled={exporting}
+                className="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full text-white text-sm font-medium hover:bg-white/20 transition disabled:opacity-60"
+                title="Export your list"
+              >
+                {exporting ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
+                ) : (
+                  <span className="material-symbols-outlined text-base">download</span>
+                )}
+                {exporting ? 'Exporting…' : 'Export'}
+              </button>
+
+              {showExportMenu && (
+                <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-[fadeIn_0.15s_ease-out]">
+                  <button
+                    onClick={() => handleExport('csv')}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                  >
+                    <span className="material-symbols-outlined text-base text-[#E67E22]">table_chart</span>
+                    Export as CSV
+                  </button>
+                  <div className="h-px bg-gray-100" />
+                  <button
+                    onClick={() => handleExport('json')}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                  >
+                    <span className="material-symbols-outlined text-base text-[#E67E22]">data_object</span>
+                    Export as JSON
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => setShowLogoutModal(true)}
+              className="bg-[#E67E22] px-4 py-1.5 rounded-full text-white text-sm font-semibold hover:opacity-90 transition"
+            >
+              Logout
+            </button>
+          </div>
+
+          {/* ── Mobile three-dot menu — hidden above sm ── */}
+          <div className="relative sm:hidden" ref={mobileMenuRef}>
+            <button
+              onClick={() => setShowMobileMenu((v) => !v)}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition text-white"
+              title="Menu"
+            >
+              <span className="material-symbols-outlined text-xl">more_vert</span>
+            </button>
+
+            {showMobileMenu && (
+              <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-[fadeIn_0.15s_ease-out]">
+
+                {/* User header */}
+                <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-[#E67E22] flex items-center justify-center font-bold uppercase text-xs text-white flex-shrink-0">
+                    {user[0]}
+                  </div>
+                  <span className="text-sm font-semibold text-gray-800 truncate">{user}</span>
+                </div>
+
+                <button
+                  onClick={shareList}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                >
+                  <span className="material-symbols-outlined text-base text-[#E67E22]">share</span>
+                  Share my list
+                </button>
+
+                <div className="h-px bg-gray-100" />
+
+                <button
+                  onClick={() => { navigate('/calendar'); setShowMobileMenu(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                >
+                  <span className="material-symbols-outlined text-base text-[#E67E22]">calendar_month</span>
+                  Airing Calendar
+                </button>
+
+                {isAdmin && (
+                  <>
+                    <div className="h-px bg-gray-100" />
+                    <button
+                      onClick={() => { navigate('/admin'); setShowMobileMenu(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                    >
+                      <span className="material-symbols-outlined text-base text-[#E67E22]">admin_panel_settings</span>
+                      Admin Dashboard
+                    </button>
+                  </>
+                )}
+
+                <div className="h-px bg-gray-100" />
+
                 <button
                   onClick={() => handleExport('csv')}
-                  className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                  disabled={exporting}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition disabled:opacity-50"
                 >
                   <span className="material-symbols-outlined text-base text-[#E67E22]">table_chart</span>
                   Export as CSV
                 </button>
-                <div className="h-px bg-gray-100" />
+
                 <button
                   onClick={() => handleExport('json')}
-                  className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                  disabled={exporting}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition disabled:opacity-50"
                 >
                   <span className="material-symbols-outlined text-base text-[#E67E22]">data_object</span>
                   Export as JSON
                 </button>
+
+                <div className="h-px bg-gray-100" />
+
+                <button
+                  onClick={() => { setShowMobileMenu(false); setShowLogoutModal(true); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition"
+                >
+                  <span className="material-symbols-outlined text-base">logout</span>
+                  Logout
+                </button>
+
               </div>
             )}
           </div>
 
-          <button
-            onClick={() => setShowLogoutModal(true)}
-            className="bg-[#E67E22] px-3 sm:px-4 py-1.5 rounded-full text-white text-sm font-semibold hover:opacity-90 transition"
-          >
-            Logout
-          </button>
         </div>
       ) : (
         <button

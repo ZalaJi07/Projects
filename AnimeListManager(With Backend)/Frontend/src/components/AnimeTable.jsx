@@ -1,8 +1,9 @@
 import { useDispatch } from "react-redux";
 import { deleteAnime, increaseEp, decreaseEp } from "../actions/entry.js";
 import { UPDATE } from "../constants/actionTypes.js";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { getAnimeDetails, getImageUrl } from "../utils/jikanCache.js";
+import * as api from "../api/index.js";
 
 // ── Delete Confirmation Modal ──
 const DeleteConfirmModal = ({ item, onConfirm, onCancel }) => {
@@ -77,7 +78,7 @@ const AnimeImage = ({ malId, size = "sm" }) => {
   return <img src={imageUrl} alt="" className={`${sizeClass} rounded object-cover shadow-sm`} onError={() => setImgError(true)} />;
 };
 
-const AnimeDetailModal = ({ anime, onClose }) => {
+const AnimeDetailModal = ({ anime, onClose, readOnly = false }) => {
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -142,6 +143,9 @@ const AnimeDetailModal = ({ anime, onClose }) => {
           <p className="text-gray-400 text-center py-4">No additional details available for manually added anime.</p>
         )}
 
+        {/* Rating picker — hidden for public/read-only viewers */}
+        <RatingPicker anime={anime} readOnly={readOnly} />
+
         <div className="mt-4 pt-3 border-t text-sm text-gray-500">
           {anime.entryType === "movie" ? (
             <p>Type: <span className="font-semibold">Movie</span></p>
@@ -149,6 +153,90 @@ const AnimeDetailModal = ({ anime, onClose }) => {
             <p>Your status: <span className="font-semibold">{anime.status}</span> • Ep: {anime.episodes} • Movies: {anime.movies}</p>
           )}
         </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Rating Picker (inside detail modal) ──
+const RatingPicker = ({ anime, readOnly = false }) => {
+  const dispatch = useDispatch();
+  const [rating, setRating] = useState(anime.rating ?? null);
+  const [saving, setSaving] = useState(false);
+  const [hover, setHover] = useState(null);
+
+  // Read-only: just show the rating as plain text (or nothing)
+  if (readOnly) {
+    if (anime.rating == null) return null;
+    return (
+      <div className="mt-4 pt-3 border-t">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-gray-600">Rating</span>
+          <span className="text-sm font-bold text-[#E67E22]">{anime.rating} / 10</span>
+        </div>
+      </div>
+    );
+  }
+
+  const save = useCallback(async (value) => {
+    const newRating = value === rating ? null : value; // tap same value = clear
+    setRating(newRating);
+    setSaving(true);
+    try {
+      const { data } = await api.updateAnime(anime._id, { ...anime, rating: newRating });
+      dispatch({ type: UPDATE, payload: data });
+    } catch {
+      setRating(anime.rating ?? null); // revert on error
+    } finally {
+      setSaving(false);
+    }
+  }, [anime, rating, dispatch]);
+
+  const display = hover ?? rating;
+
+  return (
+    <div className="mt-4 pt-3 border-t">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-semibold text-gray-600">Your rating</span>
+        {rating != null && (
+          <span className="text-sm font-bold text-[#E67E22]">{rating} / 10</span>
+        )}
+        {saving && <span className="w-3 h-3 border border-[#E67E22] border-t-transparent rounded-full animate-spin" />}
+      </div>
+      <div className="flex items-center gap-1 flex-wrap">
+        {Array.from({ length: 11 }, (_, i) => {
+          const filled = display != null && i <= display;
+          const isSelected = rating === i;
+          return (
+            <button
+              key={i}
+              type="button"
+              disabled={saving}
+              onMouseEnter={() => setHover(i)}
+              onMouseLeave={() => setHover(null)}
+              onClick={() => save(i)}
+              className={`w-8 h-8 rounded-full text-xs font-bold transition-all hover:scale-110 disabled:cursor-not-allowed
+                ${ isSelected
+                    ? 'bg-[#E67E22] text-white shadow-md ring-2 ring-[#E67E22]/40'
+                    : filled
+                    ? 'bg-orange-200 text-[#E67E22]'
+                    : 'bg-gray-100 text-gray-400 hover:bg-orange-100'
+                }`}
+            >
+              {i}
+            </button>
+          );
+        })}
+        {rating != null && (
+          <button
+            type="button"
+            onClick={() => save(rating)} // same value = clear
+            className="ml-1 text-xs text-gray-400 hover:text-gray-600 transition"
+            title="Clear rating"
+          >
+            <span className="material-symbols-outlined text-sm">close</span>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -180,7 +268,12 @@ const AnimeCard = ({ item, readOnly, setCurrentId, onEpChange, onSelect, onDelet
     >
       <AnimeImage malId={item.malId} size="md" />
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-gray-800 text-sm truncate">{item.name}</p>
+        <div className="flex items-center gap-2">
+          <p className="font-semibold text-gray-800 text-sm truncate">{item.name}</p>
+          {item.rating != null && (
+            <span className="text-xs font-bold text-[#E67E22] flex-shrink-0">★ {item.rating}</span>
+          )}
+        </div>
         {!isMovie && (
           <>
             <div className="flex items-center gap-2 mt-1">
@@ -233,7 +326,12 @@ const SeriesRow = ({ item, readOnly, setCurrentId, onEpChange, onSelect, onDelet
       <AnimeImage malId={item.malId} />
     </td>
     <td className="text-center border border-white py-1 break-words min-w-[14vw] max-w-[22vw]">
-      {item.name}
+      <div className="flex flex-col items-start gap-0.5 px-1">
+        <span>{item.name}</span>
+        {item.rating != null && (
+          <span className="text-[11px] font-bold text-[#E67E22]">★ {item.rating}/10</span>
+        )}
+      </div>
     </td>
     <td className="text-center border border-white py-1">
       <StatusBadge status={item.status} />
@@ -270,7 +368,12 @@ const MovieRow = ({ item, readOnly, setCurrentId, dispatch, onSelect, onDelete }
       <AnimeImage malId={item.malId} />
     </td>
     <td className="text-center border border-white py-1 break-words">
-      {item.name}
+      <div className="flex flex-col items-center gap-0.5">
+        <span>{item.name}</span>
+        {item.rating != null && (
+          <span className="text-[11px] font-bold text-[#E67E22]">★ {item.rating}/10</span>
+        )}
+      </div>
     </td>
     {!readOnly && (
       <td className="text-center border py-1 px-2" onClick={(e) => e.stopPropagation()}>
@@ -285,7 +388,9 @@ const MovieRow = ({ item, readOnly, setCurrentId, dispatch, onSelect, onDelete }
 
 const AnimeTable = ({ animes, setCurrentId, readOnly = false, mode = "series" }) => {
   const dispatch = useDispatch();
-  const [selectedAnime, setSelectedAnime] = useState(null);
+  // Store only the ID so the modal always reads the live Redux-updated object.
+  const [selectedAnimeId, setSelectedAnimeId] = useState(null);
+  const selectedAnime = animes.find(a => a._id === selectedAnimeId) ?? null;
   const [deleteTarget, setDeleteTarget] = useState(null);
   const isMovie = mode === "movie";
 
@@ -374,7 +479,7 @@ const AnimeTable = ({ animes, setCurrentId, readOnly = false, mode = "series" })
                 readOnly={readOnly}
                 setCurrentId={setCurrentId}
                 dispatch={dispatch}
-                onSelect={setSelectedAnime}
+                onSelect={(item) => setSelectedAnimeId(item._id)}
                 onDelete={handleDelete}
               />
             ) : (
@@ -384,7 +489,7 @@ const AnimeTable = ({ animes, setCurrentId, readOnly = false, mode = "series" })
                 readOnly={readOnly}
                 setCurrentId={setCurrentId}
                 onEpChange={handleEpChange}
-                onSelect={setSelectedAnime}
+                onSelect={(item) => setSelectedAnimeId(item._id)}
                 onDelete={handleDelete}
               />
             )
@@ -401,14 +506,14 @@ const AnimeTable = ({ animes, setCurrentId, readOnly = false, mode = "series" })
             readOnly={readOnly}
             setCurrentId={setCurrentId}
             onEpChange={handleEpChange}
-            onSelect={setSelectedAnime}
+            onSelect={(item) => setSelectedAnimeId(item._id)}
             onDelete={handleDelete}
             mode={mode}
           />
         ))}
       </div>
 
-      {selectedAnime && <AnimeDetailModal anime={selectedAnime} onClose={() => setSelectedAnime(null)} />}
+      {selectedAnime && <AnimeDetailModal anime={selectedAnime} onClose={() => setSelectedAnimeId(null)} readOnly={readOnly} />}
       {deleteTarget && (
         <DeleteConfirmModal
           item={deleteTarget}

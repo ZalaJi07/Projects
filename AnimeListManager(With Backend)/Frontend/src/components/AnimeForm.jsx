@@ -61,7 +61,6 @@ const AnimeForm = forwardRef(function AnimeForm({ list, handelChange, saveAnime,
                 </ul>
             )}
 
-            {/* Series fields — hidden for movies */}
             {!isMovie && (
                 <div className="select flex flex-col md:flex-row justify-between gap-4 md:gap-0">
                     <div className="relative w-full md:w-[32%]">

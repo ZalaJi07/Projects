@@ -157,3 +157,92 @@ export const getImageUrl = (malId) => {
 
 // Synchronous check — returns full details only if already in memory.
 export const getCachedDetails = (malId) => memoryCache[malId] || null;
+
+// ── Airing Schedule Cache ──
+//
+// Stores compact schedule entries per day in localStorage.
+// TTL: 6 hours. Keyed by lowercase day name (e.g. "monday").
+// Each entry stores only the fields needed to render a calendar card.
+
+// v2: uses image_url (full quality) instead of small_image_url, and deduplicates by mal_id
+const SCHEDULE_CACHE_KEY = 'jikan_schedule_v2';
+const SCHEDULE_EXPIRY_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+const getScheduleCache = () => {
+    try {
+        return JSON.parse(localStorage.getItem(SCHEDULE_CACHE_KEY) || '{}');
+    } catch { return {}; }
+};
+
+const saveScheduleCache = (cache) => {
+    try {
+        localStorage.setItem(SCHEDULE_CACHE_KEY, JSON.stringify(cache));
+    } catch {
+        // localStorage full — clear schedule cache and retry
+        try {
+            localStorage.removeItem(SCHEDULE_CACHE_KEY);
+            localStorage.setItem(SCHEDULE_CACHE_KEY, JSON.stringify(cache));
+        } catch { }
+    }
+};
+
+// Compact mapper — keeps only what the calendar card needs
+// Uses image_url (225x318px) — NOT small_image_url which is a blurry 50px thumbnail
+const compactEntry = (anime) => ({
+    mal_id: anime.mal_id,
+    title: anime.title,
+    title_english: anime.title_english || null,
+    image: anime.images?.jpg?.image_url || anime.images?.jpg?.large_image_url || null,
+    score: anime.score || null,
+    episodes: anime.episodes || null,
+    genres: (anime.genres || []).map(g => g.name).slice(0, 3),
+    broadcast: anime.broadcast?.string || null,
+});
+
+// Fetches one day's schedule from Jikan with caching.
+// Returns an array of compact anime objects.
+export const getSchedule = async (day) => {
+    const cache = getScheduleCache();
+    const now = Date.now();
+    const cached = cache[day];
+
+    if (cached && now - cached.timestamp < SCHEDULE_EXPIRY_MS) {
+        return cached.data;
+    }
+
+    try {
+        const res = await fetch(`https://api.jikan.moe/v4/schedules?filter=${day}&limit=25`);
+        if (res.status === 429) {
+            // Rate limited — return stale cache if available, otherwise empty
+            return cached?.data || [];
+        }
+        if (!res.ok) return cached?.data || [];
+
+        const json = await res.json();
+
+        // Deduplicate by mal_id — Jikan sometimes returns the same anime more than once
+        const seen = new Set();
+        const data = (json.data || [])
+            .filter(anime => {
+                if (seen.has(anime.mal_id)) return false;
+                seen.add(anime.mal_id);
+                return true;
+            })
+            .map(compactEntry);
+
+        const updated = { ...cache, [day]: { data, timestamp: now } };
+        saveScheduleCache(updated);
+
+        // Also warm up the image cache for every entry so the calendar loads instantly on first open
+        data.forEach(anime => {
+            if (anime.mal_id && anime.image && !imageCache[anime.mal_id]) {
+                imageCache[anime.mal_id] = anime.image;
+            }
+        });
+
+        return data;
+    } catch {
+        return cached?.data || [];
+    }
+};
+

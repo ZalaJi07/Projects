@@ -50,4 +50,7 @@ export const animeRules = [
     body("movies")
         .optional()
         .isInt({ min: 0 }).withMessage("Movies must be a positive number."),
+    body("rating")
+        .optional({ nullable: true })
+        .isFloat({ min: 0, max: 10 }).withMessage("Rating must be between 0 and 10."),
 ];
