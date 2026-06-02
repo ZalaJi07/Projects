@@ -48,6 +48,8 @@ export const decreaseEp = (id) => API.patch(`/userAnime/${id}/decreaseEp`);
 export const signIn = (formData) => API.post("/user/signin", formData);
 export const signUp = (formData) => API.post("/user/signup", formData);
 export const googleSignIn = (token) => API.post("/user/googleSignIn", { token });
+export const updateProfile = (data) => API.patch("/user/profile", data);
+
 
 // Public list API (no auth needed)
 export const fetchPublicList = (username, page = 1, limit = 20, search = '', status = '', sort = 'createdAt', order = 'desc', entryType = 'series') =>

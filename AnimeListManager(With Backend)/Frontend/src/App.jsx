@@ -10,6 +10,7 @@ import ServerWakeUp from './components/ServerWakeUp'
 import AdminRoute from './components/AdminRoute'
 import AdminDashboard from './pages/AdminDashboard'
 import AiringCalendar from './pages/AiringCalendar'
+import Profile from './pages/Profile'
 
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
             <Route path="/list/:username" element={<PublicList />} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/calendar" element={JSON.parse(localStorage.getItem('profile')) ? <AiringCalendar /> : <Navigate to="/auth" replace />} />
+            <Route path="/profile" element={JSON.parse(localStorage.getItem('profile')) ? <Profile /> : <Navigate to="/auth" replace />} />
           </Routes>
           <Footer />
         </div>
