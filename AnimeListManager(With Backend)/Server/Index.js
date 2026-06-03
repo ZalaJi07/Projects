@@ -14,9 +14,12 @@ const app = express();
 dotenv.config();
 
 
-app.use(bodyParser.json({ limit: "30mb", extended: true }));
-app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
-app.use(cors());
+app.use(bodyParser.json({ limit: "1mb" }));
+app.use(bodyParser.urlencoded({ limit: "1mb", extended: true }));
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true,
+}));
 
 app.use("/anime", entryRoutes);
 app.use("/user", userRoutes);

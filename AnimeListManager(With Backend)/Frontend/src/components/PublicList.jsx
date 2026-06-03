@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import AnimeTable from "./AnimeTable";
 import { fetchPublicList } from "../api";
+import toast from "react-hot-toast";
 
 const PublicList = () => {
-    const { username } = useParams();
+    const { username } = useParams();          // may be an _id (new links) or a username (old links)
+    const navigate = useNavigate();
+    const [displayName, setDisplayName] = useState("");  // always the real username from server
     const [animes, setAnimes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -26,6 +29,8 @@ const PublicList = () => {
                 setAnimes(data.data);
                 setTotalPages(data.totalPages);
                 setTotalItems(data.totalItems);
+                // Use the real username returned by the server, not the raw URL param
+                if (data.username) setDisplayName(data.username);
                 setLoading(false);
             })
             .catch((err) => {
@@ -81,16 +86,32 @@ const PublicList = () => {
                 <div className="flex items-center justify-between py-3">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-[#E67E22] flex items-center justify-center font-bold text-white uppercase text-lg">
-                            {username[0]}
+                            {(displayName || username)[0]}
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-gray-800">{username}'s List</h2>
+                            <h2 className="text-lg font-bold text-gray-800">{displayName || username}'s List</h2>
                             <p className="text-xs text-gray-500">
                                 {totalItems} {isMovie ? "movie" : "anime"}{totalItems !== 1 ? "s" : ""}
                             </p>
                         </div>
                     </div>
-                    <span className="px-3 py-1 bg-gray-200 text-gray-600 text-xs rounded-full font-medium">Read Only</span>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => {
+                                const statsUrl = `${window.location.origin}/list/${username}/stats`;
+                                navigator.clipboard.writeText(statsUrl)
+                                    .then(() => toast.success("Stats link copied!"))
+                                    .catch(() => {});
+                                navigate(`/list/${username}/stats`);
+                            }}
+                            className="flex items-center gap-1 px-2.5 py-1 text-xs text-gray-600 border border-gray-300 rounded-full hover:border-[#E67E22] hover:text-[#E67E22] transition"
+                            title="Copy link to public stats"
+                        >
+                            <span className="material-symbols-outlined text-sm">bar_chart</span>
+                            Stats
+                        </button>
+                        <span className="px-3 py-1 bg-gray-200 text-gray-600 text-xs rounded-full font-medium">Read Only</span>
+                    </div>
                 </div>
 
                 {/* Tab Toggle */}

@@ -3,28 +3,17 @@ import User from "../models/user.js";
 
 const auth = async (req, res, next) => {
     try {
-        console.log("Auth Middleware - Headers:", req.headers.authorization ? "Present" : "Missing");
-
         if (!req.headers.authorization) return res.status(401).json({ message: "Unauthenticated" });
 
         const token = req.headers.authorization.split(" ")[1];
-        const isCodedAuth = token && token.length < 500;
+        if (!token) return res.status(401).json({ message: "Unauthenticated" });
 
-        let decodedData;
-
-        if (token && isCodedAuth) {
-            decodedData = jwt.verify(token, process.env.JWT_SECRET);
-            req.userId = decodedData?.id;
-            req.isAdmin = decodedData?.isAdmin || false;
-        } else {
-            decodedData = jwt.decode(token);
-            req.userId = decodedData?.sub;
-            req.isAdmin = false;
-        }
+        const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+        req.userId = decodedData?.id;
+        req.isAdmin = decodedData?.isAdmin || false;
 
         next();
     } catch (error) {
-        console.log(error);
         res.status(401).json({ message: "Unauthenticated" });
     }
 }

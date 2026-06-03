@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import UserAnime from "../models/userAnime.js";
+import User from "../models/user.js";
 
 export const getAnime = async (req, res) => {
     try {
@@ -18,6 +19,9 @@ export const getAnime = async (req, res) => {
         if (search) filter.name = { $regex: search, $options: 'i' };
         if (status && status !== 'All') filter.status = status;
 
+        // Allowlist sort field to prevent arbitrary field injection in the aggregation pipeline
+        const ALLOWED_SORT = ['createdAt', 'name', 'status', 'episodes', 'rating'];
+        const safeSort = ALLOWED_SORT.includes(sort) ? sort : 'createdAt';
         const sortOrder = order === 'asc' ? 1 : -1;
         const pageNum = parseInt(page);
         const limitNum = parseInt(limit);
@@ -30,7 +34,7 @@ export const getAnime = async (req, res) => {
             {
                 $facet: {
                     data: [
-                        { $sort: { [sort]: sortOrder } },
+                        { $sort: { [safeSort]: sortOrder } },
                         { $skip: (pageNum - 1) * limitNum },
                         { $limit: limitNum },
                     ],
@@ -60,7 +64,7 @@ export const getAllAnime = async (req, res) => {
 
         const animeRows = await UserAnime.find({ creator: req.userId })
             .sort({ createdAt: -1 })
-            .select('name status episodes movies malId entryType createdAt');
+            .select('name status episodes movies rating malId entryType createdAt');
 
         res.status(200).json({ data: animeRows });
     } catch (error) {
@@ -140,24 +144,56 @@ export const deleteAnime = async (req, res) => {
 
 export const increaseEp = async (req, res) => {
     const { id: _id } = req.params;
-
     if (!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('No anime with that id!');
 
     const anime = await UserAnime.findById(_id);
     if (!anime || anime.creator !== req.userId) return res.status(403).json({ message: "Not authorized" });
 
-    const updatedAnime = await UserAnime.findByIdAndUpdate(_id, { episodes: anime.episodes + 1 }, { new: true });
+    const month = new Date().toISOString().slice(0, 7); // e.g. "2026-06"
+
+    // Ensure the month entry exists on the User doc (no-op if already there)
+    await User.updateOne(
+        { _id: req.userId, "episodeLog.month": { $ne: month } },
+        { $push: { episodeLog: { month, count: 0 } } }
+    );
+
+    // Increment anime episode count + user's monthly total in parallel
+    const [updatedAnime] = await Promise.all([
+        UserAnime.findByIdAndUpdate(_id, { $inc: { episodes: 1 } }, { new: true }),
+        User.updateOne(
+            { _id: req.userId, "episodeLog.month": month },
+            { $inc: { "episodeLog.$.count": 1 } }
+        ),
+    ]);
+
     res.json(updatedAnime);
-}
+};
 
 export const decreaseEp = async (req, res) => {
     const { id: _id } = req.params;
-
     if (!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('No anime with that id!');
 
     const anime = await UserAnime.findById(_id);
     if (!anime || anime.creator !== req.userId) return res.status(403).json({ message: "Not authorized" });
 
-    const updatedAnime = await UserAnime.findByIdAndUpdate(_id, { episodes: anime.episodes - 1 }, { new: true });
+    const month = new Date().toISOString().slice(0, 7);
+
+    // Ensure month entry exists in User's log
+    await User.updateOne(
+        { _id: req.userId, "episodeLog.month": { $ne: month } },
+        { $push: { episodeLog: { month, count: 0 } } }
+    );
+
+    // Single atomic update: only decrement log count when it's already > 0.
+    // The $inc on the array element only fires if the filter matches (count > 0),
+    // eliminating the read-then-write TOCTOU race.
+    const [updatedAnime] = await Promise.all([
+        UserAnime.findByIdAndUpdate(_id, { $inc: { episodes: -1 } }, { new: true }),
+        User.updateOne(
+            { _id: req.userId, "episodeLog.month": month, "episodeLog.$.count": { $gt: 0 } },
+            { $inc: { "episodeLog.$.count": -1 } }
+        ),
+    ]);
+
     res.json(updatedAnime);
-}
+};

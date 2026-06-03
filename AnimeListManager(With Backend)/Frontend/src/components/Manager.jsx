@@ -33,7 +33,8 @@ const Manager = () => {
     // into a single re-render → a single fetch (Issue 3 fix).
     setList({ name: "", status: "", episodes: "", movies: "", malId: null });
     setCurrentId(null);
-    setSearchResults([]);
+    setSearchTerm("");       // must clear this BEFORE searchResults — the useEffect
+    setSearchResults([]);    // watches searchTerm and would re-fire the search otherwise
     setFilterStatus("All");
     setListSearch("");
     setListSearchDisplay("");

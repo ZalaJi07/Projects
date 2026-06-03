@@ -1,10 +1,11 @@
 import express from "express";
-import { getPublicList } from "../controllers/publicList.js";
+import { getPublicList, getPublicStats } from "../controllers/publicList.js";
 import { apiLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
-// Public route — no auth required
+// Public routes — no auth required
+router.get("/:username/stats", apiLimiter, getPublicStats);
 router.get("/:username", apiLimiter, getPublicList);
 
 export default router;

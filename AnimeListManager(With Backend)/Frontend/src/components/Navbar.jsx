@@ -9,6 +9,7 @@ const Navbar = () => {
   const location = useLocation()
   const dispatch = useDispatch()
   const [user, setUser] = useState(JSON.parse(localStorage.getItem("profile"))?.result?.username);
+  const [userId, setUserId] = useState(JSON.parse(localStorage.getItem("profile"))?.result?._id);
   const [isAdmin, setIsAdmin] = useState(JSON.parse(localStorage.getItem("profile"))?.result?.isAdmin || false);
 
   // Hide personal controls when viewing someone else's public list
@@ -17,6 +18,7 @@ const Navbar = () => {
   useEffect(() => {
     const profile = JSON.parse(localStorage.getItem("profile"));
     setUser(profile?.result?.username);
+    setUserId(profile?.result?._id);
     setIsAdmin(profile?.result?.isAdmin || false);
   }, [location]);
 
@@ -138,7 +140,10 @@ const Navbar = () => {
   };
 
   const shareList = () => {
-    const url = `${window.location.origin}/list/${user}`;
+    // Use _id in the URL so the link stays valid even if the user renames their account.
+    // The public list page fetches and displays the current username from the server.
+    const identifier = userId || user;
+    const url = `${window.location.origin}/list/${identifier}`;
     navigator.clipboard.writeText(url).then(() => {
       toast.success("Share link copied to clipboard!");
     }).catch(() => {
@@ -209,6 +214,15 @@ const Navbar = () => {
               >
                 <span className="material-symbols-outlined text-base">calendar_month</span>
                 Calendar
+              </button>
+
+              <button
+                onClick={() => navigate('/stats')}
+                className="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full text-white text-sm font-medium hover:bg-white/20 transition"
+                title="Stats dashboard"
+              >
+                <span className="material-symbols-outlined text-base">bar_chart</span>
+                Stats
               </button>
 
               {isAdmin && (
@@ -314,6 +328,14 @@ const Navbar = () => {
                   >
                     <span className="material-symbols-outlined text-base text-[#E67E22]">calendar_month</span>
                     Airing Calendar
+                  </button>
+
+                  <button
+                    onClick={() => { navigate('/stats'); setShowMobileMenu(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                  >
+                    <span className="material-symbols-outlined text-base text-[#E67E22]">bar_chart</span>
+                    Stats
                   </button>
 
                   {isAdmin && (

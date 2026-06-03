@@ -5,7 +5,6 @@ import User from "../models/user.js";
 
 export const signIn = async (req, res) => {
     const { email, password } = req.body;
-    console.log("SignIn Request Body:", req.body);
 
     try {
         const existingUser = await User.findOne({ email });
@@ -34,7 +33,6 @@ export const signIn = async (req, res) => {
 
 export const signUp = async (req, res) => {
     try {
-        console.log("SignUp Request Body:", req.body);
         const { username, email, password, confirmPassword } = req.body;
 
         const existingUser = await User.findOne({ email });
@@ -141,4 +139,37 @@ export const updateProfile = async (req, res) => {
         res.status(500).json({ message: "Something went wrong." });
     }
 }
-
+
+export const getUserStats = async (req, res) => {
+    try {
+        const user = await User.findById(req.userId, { episodeLog: 1 });
+        if (!user) return res.status(404).json({ message: "User not found." });
+        res.json({ episodeLog: user.episodeLog || [] });
+    } catch (error) {
+        res.status(500).json({ message: "Something went wrong." });
+    }
+};
+
+// Called on every app load to silently refresh stale localStorage on other devices.
+// Returns fresh profile + a new token so username/isAdmin changes propagate automatically.
+export const getMe = async (req, res) => {
+    try {
+        const user = await User.findById(req.userId);
+        if (!user) return res.status(404).json({ message: "User not found." });
+
+        if (user.isDisabled) {
+            return res.status(403).json({ message: "Your account has been disabled." });
+        }
+
+        const token = jwt.sign(
+            { email: user.email, id: user._id, isAdmin: user.isAdmin || false },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        const { password: _pw, ...userWithoutPassword } = user._doc;
+        res.json({ result: userWithoutPassword, token });
+    } catch (error) {
+        res.status(500).json({ message: "Something went wrong." });
+    }
+};

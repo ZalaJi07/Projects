@@ -54,3 +54,24 @@ export const animeRules = [
         .optional({ nullable: true })
         .isFloat({ min: 0, max: 10 }).withMessage("Rating must be between 0 and 10."),
 ];
+
+// Validation rules for profile updates (username + optional password change)
+export const profileRules = [
+    body("username")
+        .optional()
+        .trim()
+        .isLength({ min: 2, max: 30 }).withMessage("Username must be between 2 and 30 characters.")
+        .matches(/^[a-zA-Z0-9_.-]+$/).withMessage("Username can only contain letters, numbers, underscores, dots and hyphens."),
+    body("newPassword")
+        .optional()
+        .isLength({ min: 6 }).withMessage("Password must be at least 6 characters."),
+    body("confirmNewPassword")
+        .optional()
+        .custom((value, { req }) => {
+            if (req.body.newPassword && value !== req.body.newPassword) {
+                throw new Error("Passwords don't match.");
+            }
+            return true;
+        }),
+];
+

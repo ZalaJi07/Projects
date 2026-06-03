@@ -49,11 +49,15 @@ export const signIn = (formData) => API.post("/user/signin", formData);
 export const signUp = (formData) => API.post("/user/signup", formData);
 export const googleSignIn = (token) => API.post("/user/googleSignIn", { token });
 export const updateProfile = (data) => API.patch("/user/profile", data);
+export const fetchUserStats = () => API.get("/user/stats");
+export const fetchMe = () => API.get("/user/me");
 
 
 // Public list API (no auth needed)
 export const fetchPublicList = (username, page = 1, limit = 20, search = '', status = '', sort = 'createdAt', order = 'desc', entryType = 'series') =>
     API.get(`/list/${username}?page=${page}&limit=${limit}&search=${search}&status=${status}&sort=${sort}&order=${order}&entryType=${entryType}`);
+export const fetchPublicStats = (username) => API.get(`/list/${username}/stats`);
+
 
 // Admin API (admin-only, blocked server-side for non-admins)
 export const adminFetchUsers = (page = 1, limit = 20, search = '') =>

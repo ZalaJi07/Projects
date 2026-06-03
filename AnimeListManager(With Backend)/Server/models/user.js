@@ -5,9 +5,12 @@ const userSchema = mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     id: { type: String },
-    // Admin panel fields — both default to false so all existing users are unaffected
     isAdmin: { type: Boolean, default: false },
     isDisabled: { type: Boolean, default: false },
+    // Global monthly episode activity — one total count per month, updated on every +/- press
+    // Format: [{ month: "2026-06", count: 14 }]
+    episodeLog: { type: [{ month: String, count: Number }], default: [] },
 }, { timestamps: true });
+
 
 export default mongoose.model("User", userSchema);
