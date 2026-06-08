@@ -151,7 +151,9 @@ export const increaseEp = async (req, res) => {
 
     const month = new Date().toISOString().slice(0, 7); // e.g. "2026-06"
 
-    // Ensure the month entry exists on the User doc (no-op if already there)
+    // Create the month entry if it doesn't exist yet, then increment in the next step.
+    // Two-step is intentional: updateOne with $push + $ne is not atomic on the increment,
+    // so we just guarantee the document exists here.
     await User.updateOne(
         { _id: req.userId, "episodeLog.month": { $ne: month } },
         { $push: { episodeLog: { month, count: 0 } } }

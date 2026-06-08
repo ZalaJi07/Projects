@@ -21,7 +21,7 @@ const Manager = () => {
 
   const [currentId, setCurrentId] = useState(null);
 
-  // Tab state: "series" or "movie" — persisted
+  // Tab state: "series" or "movie" — persisted to localStorage
   const [activeTab, setActiveTabState] = useState(() => {
     const saved = localStorage.getItem("activeTab");
     return saved === "movie" ? "movie" : "series";
@@ -29,12 +29,13 @@ const Manager = () => {
   const setActiveTab = (tab) => {
     setActiveTabState(tab);
     localStorage.setItem("activeTab", tab);
-    // Reset all tab-dependent state in one call so React 18 batches it
-    // into a single re-render → a single fetch (Issue 3 fix).
+    // Reset all tab-dependent state together so React 18 batches it into one render
     setList({ name: "", status: "", episodes: "", movies: "", malId: null });
     setCurrentId(null);
-    setSearchTerm("");       // must clear this BEFORE searchResults — the useEffect
-    setSearchResults([]);    // watches searchTerm and would re-fire the search otherwise
+    // searchTerm must clear before searchResults — clearing searchTerm kills the ongoing
+    // debounce, otherwise the old results would flash back on the new tab
+    setSearchTerm("");
+    setSearchResults([]);
     setFilterStatus("All");
     setListSearch("");
     setListSearchDisplay("");
@@ -98,8 +99,7 @@ const Manager = () => {
 
   // (Tab-reset and page-reset effects removed — see setActiveTab above for Issue 3 fix)
 
-  // Issue 7 fix: if the current page is empty (e.g. user deleted the last item on
-  // this page) and we are not on page 1, step back so the user lands on real data.
+  // If the current page is empty (e.g. last item deleted) step back automatically
   useEffect(() => {
     if (!loading && animes.length === 0 && page > 1) {
       setPage((prev) => Math.max(1, prev - 1));
@@ -194,9 +194,8 @@ const Manager = () => {
     }
     setList({ name: "", status: "", episodes: "", movies: "", malId: null });
 
-    // Issue 1 fix: for updates the reducer already applied the change locally
-    // (via the UPDATE action), so no re-fetch is needed.
-    // For creates, re-fetch to get the correct server-side sort order.
+    // For updates, Redux already applied the change locally via the UPDATE action,
+    // so no re-fetch needed. For creates, re-fetch to get correct server-side sort.
     if (!currentId) {
       dispatch(getAnimes(page, 20, listSearch, filterStatus === "All" ? "" : filterStatus, sortField, sortOrder, activeTab));
     }

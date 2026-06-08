@@ -5,6 +5,7 @@ const auth = async (req, res, next) => {
     try {
         if (!req.headers.authorization) return res.status(401).json({ message: "Unauthenticated" });
 
+        // Bearer <token>
         const token = req.headers.authorization.split(" ")[1];
         if (!token) return res.status(401).json({ message: "Unauthenticated" });
 
@@ -14,6 +15,7 @@ const auth = async (req, res, next) => {
 
         next();
     } catch (error) {
+        // Covers expired and tampered tokens
         res.status(401).json({ message: "Unauthenticated" });
     }
 }

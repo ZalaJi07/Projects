@@ -29,8 +29,8 @@ export default (state = initialState, action) => {
                 ...state,
                 animes: state.animes.filter((anime) => anime._id !== action.payload),
                 totalItems: newTotal,
-                // Recalculate so the pagination bar never shows a page that no longer exists.
-                // Page size is fixed at 20 throughout the app.
+                // Recalculate so pagination never shows a page that no longer exists.
+                // Page size is always 20 throughout the app.
                 totalPages: Math.max(1, Math.ceil(newTotal / 20)),
             };
         }

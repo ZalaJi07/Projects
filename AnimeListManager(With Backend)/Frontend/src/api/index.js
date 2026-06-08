@@ -19,7 +19,7 @@ API.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // Don't auto-logout for auth routes (wrong password etc.) or if already on auth page
+            // Skip auto-logout for auth routes (wrong password returns 401 too)
             const url = error.config?.url || '';
             const isAuthRoute = url.includes('/user/signin') || url.includes('/user/signup') || url.includes('/user/googleSignIn');
             if (!isAuthRoute && window.location.pathname !== '/auth') {

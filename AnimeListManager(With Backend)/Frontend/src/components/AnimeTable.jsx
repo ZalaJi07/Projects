@@ -388,7 +388,7 @@ const MovieRow = ({ item, readOnly, setCurrentId, dispatch, onSelect, onDelete }
 
 const AnimeTable = ({ animes, setCurrentId, readOnly = false, mode = "series" }) => {
   const dispatch = useDispatch();
-  // Store only the ID so the modal always reads the live Redux-updated object.
+  // Track by ID so the modal always reads the live Redux state, not a stale copy
   const [selectedAnimeId, setSelectedAnimeId] = useState(null);
   const selectedAnime = animes.find(a => a._id === selectedAnimeId) ?? null;
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -409,7 +409,7 @@ const AnimeTable = ({ animes, setCurrentId, readOnly = false, mode = "series" })
   }, []);
 
   const handleEpChange = (item, delta) => {
-    // Record the baseline BEFORE any pending optimistic changes in this window.
+    // Record the starting point before any clicks in this debounce window
     if (epInitialRef.current[item._id] === undefined) {
       epInitialRef.current[item._id] = item.episodes;
     }
@@ -418,12 +418,11 @@ const AnimeTable = ({ animes, setCurrentId, readOnly = false, mode = "series" })
     const newCount = Math.max(0, current + delta);
     epTargetsRef.current[item._id] = newCount;
 
-    // Optimistic: update Redux state immediately so the UI responds at once.
+    // Update the UI immediately so it feels snappy
     dispatch({ type: UPDATE, payload: { ...item, episodes: newCount } });
 
-    // Debounce: after 700ms of inactivity, sync the total delta to the server
-    // using the proven increaseEp/decreaseEp endpoints, called sequentially
-    // so each server read sees the result of the previous write (no race condition).
+    // Wait 700ms after the last click, then send the total delta to the server.
+    // Calling increaseEp/decreaseEp one at a time keeps the server log accurate.
     clearTimeout(epTimersRef.current[item._id]);
     epTimersRef.current[item._id] = setTimeout(async () => {
       const initial = epInitialRef.current[item._id];

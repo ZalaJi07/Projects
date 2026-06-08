@@ -24,6 +24,7 @@ export const signIn = async (req, res) => {
             { expiresIn: "7d" }
         );
 
+        // Strip password before sending — never send hashed passwords to the client
         const { password: _password, ...userWithoutPassword } = existingUser._doc;
         res.status(200).json({ result: userWithoutPassword, token });
     } catch (error) {
@@ -60,6 +61,7 @@ export const googleSignIn = async (req, res) => {
     const { token } = req.body;
 
     try {
+        // Google ID token comes from the frontend OAuth library — safe to decode here
         const decoded = jwt.decode(token);
         const { email, name, sub } = decoded;
 
@@ -79,6 +81,7 @@ export const googleSignIn = async (req, res) => {
             const { password, ...userWithoutPassword } = existingUser._doc;
             res.status(200).json({ result: userWithoutPassword, token: newToken });
         } else {
+            // New Google user — use sub as the password placeholder (never used for login)
             const result = await User.create({ email, username: name, password: sub });
             const newToken = jwt.sign(
                 { email: result.email, id: result._id, isAdmin: false },

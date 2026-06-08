@@ -4,10 +4,9 @@ import { useDispatch } from 'react-redux';
 import toast from 'react-hot-toast';
 import * as api from '../api/index.js';
 
-// Detect Google accounts — their password field is a Google sub ID, not bcryptable
+// Google accounts were created with the Google sub ID as their password (not bcrypt)
+// so checking for the bcrypt prefix ($2) is a reliable way to detect them
 const isGoogleAccount = (profile) => {
-    // Google users were created without a proper bcrypt password (stored raw sub ID)
-    // We check by seeing if the id field equals a sub-format string (no $ prefix from bcrypt)
     const pass = profile?.result?.password;
     return pass !== undefined && !pass?.startsWith('$2');
 };
@@ -38,10 +37,10 @@ const Profile = () => {
         ? new Date(user.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })
         : 'Unknown';
 
-    // Swap localStorage profile with fresh data from server
+    // Update localStorage and dispatch so Navbar re-reads on next location change
     const refreshProfile = (result, token) => {
         localStorage.setItem('profile', JSON.stringify({ result, token }));
-        // Trigger navbar re-read (it listens to location changes)
+        // Navbar reads from localStorage on location changes, dispatching triggers that
         dispatch({ type: 'PROFILE_UPDATED', payload: result });
     };
 

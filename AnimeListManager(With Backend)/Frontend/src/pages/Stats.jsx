@@ -167,7 +167,8 @@ const Stats = () => {
     const completed = (statusCounts.Finished || 0) + (statusCounts.CaughtUp || 0);
     const completionRate = series.length > 0 ? Math.round((completed / series.length) * 100) : 0;
 
-    // Last 6 months from userLog — one number per month, no aggregation needed
+    // Build last 6 months from the server-side log — NOT computed from entries
+    // (entries don't track when each episode was watched, only the running total)
     const monthlyEps = Array.from({ length: 6 }, (_, i) => {
       const d = new Date();
       d.setDate(1);
@@ -232,9 +233,10 @@ const Stats = () => {
     let cancelled = false;
     let loaded = 0;
 
+    // Async IIFE so we can use await inside useEffect
     (async () => {
       for (const malId of malIds) {
-        if (cancelled) break;
+        if (cancelled) break; // cleanup on unmount
         const details = await getAnimeDetails(malId); // rate limiting handled by jikanCache queue
         if (details?.genres) {
           setGenres(prev => {
