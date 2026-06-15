@@ -154,7 +154,7 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="bg-[#2C3E50] px-3 sm:px-6 py-2 shadow-md flex items-center justify-between flex-shrink-0">
+      <div className="bg-[var(--surface)] px-3 sm:px-6 py-2 shadow-md flex items-center justify-between flex-shrink-0">
 
         {/* Logo */}
         <img src="/logo.png" alt="logo" className="h-10 sm:h-12 cursor-pointer" onClick={() => navigate("/")} />
@@ -165,7 +165,7 @@ const Navbar = () => {
             {user ? (
               <button
                 onClick={() => navigate("/")}
-                className="flex items-center gap-1 bg-[#E67E22] px-3 sm:px-4 py-1.5 rounded-full text-white text-sm font-semibold hover:opacity-90 transition"
+                className="flex items-center gap-1 bg-[var(--primary)] px-3 sm:px-4 py-1.5 rounded-full text-white text-sm font-semibold hover:opacity-90 transition"
               >
                 <span className="material-symbols-outlined text-base">arrow_back</span>
                 My List
@@ -173,7 +173,7 @@ const Navbar = () => {
             ) : (
               <button
                 onClick={() => navigate("/auth")}
-                className="bg-[#E67E22] px-4 py-1.5 rounded-full text-white font-semibold hover:opacity-90 transition"
+                className="bg-[var(--primary)] px-4 py-1.5 rounded-full text-white font-semibold hover:opacity-90 transition"
               >
                 Login
               </button>
@@ -188,7 +188,7 @@ const Navbar = () => {
               className="flex items-center gap-2 hover:opacity-80 transition"
               title="Your profile"
             >
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#E67E22] flex items-center justify-center font-bold uppercase text-sm sm:text-base">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[var(--primary)] flex items-center justify-center font-bold uppercase text-sm sm:text-base">
                 {user[0]}
               </div>
               {/* Username — hidden on mobile */}
@@ -256,17 +256,17 @@ const Navbar = () => {
                   <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-[fadeIn_0.15s_ease-out]">
                     <button
                       onClick={() => handleExport('csv')}
-                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-[var(--row-bg)] hover:text-[var(--primary)] transition"
                     >
-                      <span className="material-symbols-outlined text-base text-[#E67E22]">table_chart</span>
+                      <span className="material-symbols-outlined text-base text-[var(--primary)]">table_chart</span>
                       Export as CSV
                     </button>
                     <div className="h-px bg-gray-100" />
                     <button
                       onClick={() => handleExport('json')}
-                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-[var(--row-bg)] hover:text-[var(--primary)] transition"
                     >
-                      <span className="material-symbols-outlined text-base text-[#E67E22]">data_object</span>
+                      <span className="material-symbols-outlined text-base text-[var(--primary)]">data_object</span>
                       Export as JSON
                     </button>
                   </div>
@@ -275,7 +275,7 @@ const Navbar = () => {
 
               <button
                 onClick={() => setShowLogoutModal(true)}
-                className="bg-[#E67E22] px-4 py-1.5 rounded-full text-white text-sm font-semibold hover:opacity-90 transition"
+                className="bg-[var(--primary)] px-4 py-1.5 rounded-full text-white text-sm font-semibold hover:opacity-90 transition"
               >
                 Logout
               </button>
@@ -296,7 +296,7 @@ const Navbar = () => {
 
                   {/* User header */}
                   <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-[#E67E22] flex items-center justify-center font-bold uppercase text-xs text-white flex-shrink-0">
+                    <div className="w-7 h-7 rounded-full bg-[var(--primary)] flex items-center justify-center font-bold uppercase text-xs text-white flex-shrink-0">
                       {user[0]}
                     </div>
                     <span className="text-sm font-semibold text-gray-800 truncate">{user}</span>
@@ -304,9 +304,9 @@ const Navbar = () => {
 
                   <button
                     onClick={() => { navigate('/profile'); setShowMobileMenu(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-[var(--row-bg)] hover:text-[var(--primary)] transition"
                   >
-                    <span className="material-symbols-outlined text-base text-[#E67E22]">manage_accounts</span>
+                    <span className="material-symbols-outlined text-base text-[var(--primary)]">manage_accounts</span>
                     Profile
                   </button>
 
@@ -314,9 +314,9 @@ const Navbar = () => {
 
                   <button
                     onClick={shareList}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-[var(--row-bg)] hover:text-[var(--primary)] transition"
                   >
-                    <span className="material-symbols-outlined text-base text-[#E67E22]">share</span>
+                    <span className="material-symbols-outlined text-base text-[var(--primary)]">share</span>
                     Share my list
                   </button>
 
@@ -324,17 +324,17 @@ const Navbar = () => {
 
                   <button
                     onClick={() => { navigate('/calendar'); setShowMobileMenu(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-[var(--row-bg)] hover:text-[var(--primary)] transition"
                   >
-                    <span className="material-symbols-outlined text-base text-[#E67E22]">calendar_month</span>
+                    <span className="material-symbols-outlined text-base text-[var(--primary)]">calendar_month</span>
                     Airing Calendar
                   </button>
 
                   <button
                     onClick={() => { navigate('/stats'); setShowMobileMenu(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-[var(--row-bg)] hover:text-[var(--primary)] transition"
                   >
-                    <span className="material-symbols-outlined text-base text-[#E67E22]">bar_chart</span>
+                    <span className="material-symbols-outlined text-base text-[var(--primary)]">bar_chart</span>
                     Stats
                   </button>
 
@@ -343,9 +343,9 @@ const Navbar = () => {
                       <div className="h-px bg-gray-100" />
                       <button
                         onClick={() => { navigate('/admin'); setShowMobileMenu(false); }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition"
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-[var(--row-bg)] hover:text-[var(--primary)] transition"
                       >
-                        <span className="material-symbols-outlined text-base text-[#E67E22]">admin_panel_settings</span>
+                        <span className="material-symbols-outlined text-base text-[var(--primary)]">admin_panel_settings</span>
                         Admin Dashboard
                       </button>
                     </>
@@ -356,18 +356,18 @@ const Navbar = () => {
                   <button
                     onClick={() => handleExport('csv')}
                     disabled={exporting}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition disabled:opacity-50"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-[var(--row-bg)] hover:text-[var(--primary)] transition disabled:opacity-50"
                   >
-                    <span className="material-symbols-outlined text-base text-[#E67E22]">table_chart</span>
+                    <span className="material-symbols-outlined text-base text-[var(--primary)]">table_chart</span>
                     Export as CSV
                   </button>
 
                   <button
                     onClick={() => handleExport('json')}
                     disabled={exporting}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#E67E22] transition disabled:opacity-50"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-[var(--row-bg)] hover:text-[var(--primary)] transition disabled:opacity-50"
                   >
-                    <span className="material-symbols-outlined text-base text-[#E67E22]">data_object</span>
+                    <span className="material-symbols-outlined text-base text-[var(--primary)]">data_object</span>
                     Export as JSON
                   </button>
 
@@ -389,7 +389,7 @@ const Navbar = () => {
         ) : (
           <button
             onClick={() => navigate("/auth")}
-            className="bg-[#E67E22] px-4 py-1.5 rounded-full text-white font-semibold hover:opacity-90 transition"
+            className="bg-[var(--primary)] px-4 py-1.5 rounded-full text-white font-semibold hover:opacity-90 transition"
           >
             Login
           </button>
@@ -404,8 +404,8 @@ const Navbar = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
-                <span className="material-symbols-outlined text-[#E67E22] text-xl">logout</span>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--row-border)' }}>
+                <span className="material-symbols-outlined text-[var(--primary)] text-xl">logout</span>
               </div>
               <div>
                 <h3 className="font-bold text-gray-800">Logout?</h3>
@@ -422,7 +422,7 @@ const Navbar = () => {
               </button>
               <button
                 onClick={logout}
-                className="px-4 py-2 text-sm font-medium text-white bg-[#E67E22] rounded-lg hover:bg-[#d35400] transition"
+                className="px-4 py-2 text-sm font-medium text-white bg-[var(--primary)] rounded-lg hover:bg-[var(--primary-dark)] transition"
               >
                 Logout
               </button>

@@ -16,14 +16,15 @@ import Profile from './pages/Profile'
 import Stats from './pages/Stats'
 import PublicStats from './pages/PublicStats'
 import { fetchMe } from './api/index.js'
+import { useTheme } from './context/ThemeContext.jsx'
 
 
 function App() {
+  const { setTheme } = useTheme();
 
   // ── Silent profile sync ──────────────────────────────────────────────────
   // On every app load, fetch fresh profile from server and update localStorage.
-  // This ensures username/isAdmin changes made on another device propagate here
-  // without forcing a logout. Errors are silently ignored (best-effort only).
+  // This ensures username/isAdmin/theme changes made on another device propagate here.
   useEffect(() => {
     const stored = localStorage.getItem('profile');
     if (!stored) return; // not logged in — nothing to sync
@@ -32,14 +33,19 @@ function App() {
       .then(({ data }) => {
         const current = JSON.parse(localStorage.getItem('profile') || 'null');
         if (!current) return;
-        // Only write if something actually changed (avoids unnecessary re-renders)
+
+        // Sync theme silently — no reload needed, just update CSS variable
+        if (data.result?.theme) {
+          setTheme(data.result.theme, false); // false = don't re-save to DB
+        }
+
+        // Only reload page if username or admin status changed
         const changed =
           current.result?.username !== data.result?.username ||
           current.result?.isAdmin  !== data.result?.isAdmin;
         if (changed) {
           localStorage.setItem('profile', JSON.stringify({ result: data.result, token: data.token }));
           // Force a full page reload so Navbar + all components pick up the new values.
-          // This is intentional — a username change is a rare event.
           window.location.reload();
         }
       })
@@ -50,7 +56,6 @@ function App() {
           toast.error('Your account has been disabled. Contact support.');
           setTimeout(() => { window.location.href = '/auth'; }, 1500);
         }
-        // Any other error (network, server down) — silently ignore
       });
   }, []); // run once on mount
 
@@ -61,13 +66,13 @@ function App() {
         toastOptions={{
           duration: 3000,
           style: {
-            background: '#2C3E50',
+            background: 'var(--surface)',
             color: '#fff',
             borderRadius: '8px',
             fontSize: '14px',
           },
           success: {
-            iconTheme: { primary: '#E67E22', secondary: '#fff' },
+            iconTheme: { primary: 'var(--primary)', secondary: '#fff' },
           },
           error: {
             iconTheme: { primary: '#e74c3c', secondary: '#fff' },

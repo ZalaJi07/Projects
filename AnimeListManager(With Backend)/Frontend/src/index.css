@@ -1,3 +1,65 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Theme CSS variables */
+/* Applied via data-theme on <html>. ThemeContext.jsx sets this on mount.     */
+
+[data-theme="orange"] {
+  --primary:        #E67E22;
+  --primary-dark:   #d35400;
+  --primary-light:  #f39c12;
+  --surface:        #2C3E50;
+  --bg:             #ECF0F1;
+  --row-bg:         #fff7ed;   /* orange-50  */
+  --row-border:     #ffedd5;   /* orange-100 */
+  --row-hover:      #fed7aa;   /* orange-200 */
+}
+
+[data-theme="ocean"] {
+  --primary:        #3B82F6;
+  --primary-dark:   #1d4ed8;
+  --primary-light:  #60a5fa;
+  --surface:        #0F1E35;
+  --bg:             #EFF6FF;
+  --row-bg:         #eff6ff;   /* blue-50  */
+  --row-border:     #dbeafe;   /* blue-100 */
+  --row-hover:      #bfdbfe;   /* blue-200 */
+}
+
+[data-theme="emerald"] {
+  --primary:        #10B981;
+  --primary-dark:   #047857;
+  --primary-light:  #34d399;
+  --surface:        #0C1F18;
+  --bg:             #ECFDF5;
+  --row-bg:         #ecfdf5;   /* emerald-50  */
+  --row-border:     #d1fae5;   /* emerald-100 */
+  --row-hover:      #a7f3d0;   /* emerald-200 */
+}
+
+[data-theme="violet"] {
+  --primary:        #8B5CF6;
+  --primary-dark:   #6d28d9;
+  --primary-light:  #a78bfa;
+  --surface:        #1A1033;
+  --bg:             #F5F3FF;
+  --row-bg:         #f5f3ff;   /* violet-50  */
+  --row-border:     #ede9fe;   /* violet-100 */
+  --row-hover:      #ddd6fe;   /* violet-200 */
+}
+
+[data-theme="rose"] {
+  --primary:        #F43F5E;
+  --primary-dark:   #be123c;
+  --primary-light:  #fb7185;
+  --surface:        #1C0A12;
+  --bg:             #FFF1F2;
+  --row-bg:         #fff1f2;   /* rose-50  */
+  --row-border:     #ffe4e6;   /* rose-100 */
+  --row-hover:      #fecdd3;   /* rose-200 */
+}
+
+/* hide scrollbar (used in AiringCalendar day tabs) */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

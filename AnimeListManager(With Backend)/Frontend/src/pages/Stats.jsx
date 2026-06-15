@@ -6,12 +6,12 @@ import { getAnimeDetails, getCachedDetails } from '../utils/jikanCache.js';
 
 // ── Status colour palette ────────────────────────────────────────────────────
 const STATUS_CFG = {
-  Finished:  { color: '#22c55e', label: 'Finished'  },
-  CaughtUp:  { color: '#a855f7', label: 'Caught Up' },
-  Watching:  { color: '#3b82f6', label: 'Watching'  },
-  OnHold:    { color: '#eab308', label: 'On Hold'   },
-  Pending:   { color: '#94a3b8', label: 'Pending'   },
-  Dropped:   { color: '#ef4444', label: 'Dropped'   },
+  Finished: { color: '#22c55e', label: 'Finished' },
+  CaughtUp: { color: '#a855f7', label: 'Caught Up' },
+  Watching: { color: '#3b82f6', label: 'Watching' },
+  OnHold: { color: '#eab308', label: 'On Hold' },
+  Pending: { color: '#94a3b8', label: 'Pending' },
+  Dropped: { color: '#ef4444', label: 'Dropped' },
 };
 
 // ── SVG Donut chart ──────────────────────────────────────────────────────────
@@ -21,8 +21,8 @@ const polar = (cx, cy, r, deg) => {
 };
 
 const donutPath = (cx, cy, outerR, innerR, start, end) => {
-  const s  = polar(cx, cy, outerR, start);
-  const e  = polar(cx, cy, outerR, end);
+  const s = polar(cx, cy, outerR, start);
+  const e = polar(cx, cy, outerR, end);
   const si = polar(cx, cy, innerR, end);
   const ei = polar(cx, cy, innerR, start);
   const large = end - start > 180 ? 1 : 0;
@@ -85,7 +85,7 @@ const BarChart = ({ data }) => {
             style={{
               height: `${Math.max((count / max) * 100, count > 0 ? 6 : 2)}%`,
               background: count > 0
-                ? 'linear-gradient(to top, #E67E22, #f39c12)'
+                ? 'linear-gradient(to top, var(--primary), var(--primary-light))'
                 : '#e5e7eb',
             }}
           />
@@ -120,12 +120,12 @@ const Stats = () => {
   const navigate = useNavigate();
   const profile = JSON.parse(localStorage.getItem('profile') || 'null')?.result;
   const username = profile?.username;
-  const userId   = profile?._id;
+  const userId = profile?._id;
 
-  const [entries,       setEntries]       = useState([]);
-  const [userLog,       setUserLog]       = useState([]);
-  const [loading,       setLoading]       = useState(true);
-  const [genres,        setGenres]        = useState({});
+  const [entries, setEntries] = useState([]);
+  const [userLog, setUserLog] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [genres, setGenres] = useState({});
   const [genreProgress, setGenreProgress] = useState({ loaded: 0, total: 0 });
 
   // ── Fetch entries + user episodeLog in parallel ──────────────────────────
@@ -138,7 +138,7 @@ const Stats = () => {
         setEntries(animesRes.data.data || []);
         setUserLog(statsRes.data.episodeLog || []);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
@@ -255,18 +255,18 @@ const Stats = () => {
 
   // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) return (
-    <div className="flex-1 bg-[#ECF0F1] overflow-y-auto">
-      <div className="bg-[#2C3E50] h-20" />
+    <div className="flex-1 bg-[var(--bg)] overflow-y-auto">
+      <div className="bg-[var(--surface)] h-20" />
       <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-5">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {[1,2,3,4].map(i => <Skeleton key={i} className="h-24" />)}
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24" />)}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <Skeleton className="h-64" />
           <Skeleton className="h-64" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {[1,2,3].map(i => <Skeleton key={i} className="h-28" />)}
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-28" />)}
         </div>
       </div>
     </div>
@@ -274,13 +274,13 @@ const Stats = () => {
 
   // ── Empty state ──────────────────────────────────────────────────────────
   if (!entries.length || entries.length < 3) return (
-    <div className="flex-1 flex flex-col items-center justify-center bg-[#ECF0F1] p-8 text-center gap-3">
+    <div className="flex-1 flex flex-col items-center justify-center bg-[var(--bg)] p-8 text-center gap-3">
       <span className="material-symbols-outlined text-6xl text-gray-300">bar_chart</span>
       <h2 className="text-xl font-bold text-gray-600">Not enough data yet</h2>
       <p className="text-gray-400 text-sm">Add at least 3 anime to your list to see your stats.</p>
       <button
         onClick={() => navigate('/')}
-        className="mt-2 bg-[#E67E22] text-white px-5 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition"
+        className="mt-2 bg-[var(--primary)] text-white px-5 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition"
       >
         Go to my list
       </button>
@@ -293,19 +293,19 @@ const Stats = () => {
     hasLogData, topRated, watching, longest, latest, daysAgo,
   } = stats;
 
-  const sortedGenres  = Object.entries(genres).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const sortedGenres = Object.entries(genres).sort((a, b) => b[1] - a[1]).slice(0, 10);
   const maxGenreCount = sortedGenres[0]?.[1] || 1;
   const MEDAL = ['🥇', '🥈', '🥉'];
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#ECF0F1]">
+    <div className="flex-1 overflow-y-auto bg-[var(--bg)]">
 
       {/* ── Header ── */}
-      <div className="bg-[#2C3E50] px-4 sm:px-8 py-6 shadow-md">
+      <div className="bg-[var(--surface)] px-4 sm:px-8 py-6 shadow-md">
         <div className="flex items-center justify-between max-w-5xl mx-auto">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#E67E22]">bar_chart</span>
+              <span className="material-symbols-outlined text-[var(--primary)]">bar_chart</span>
               Stats Dashboard
             </h1>
             <p className="text-white/50 text-sm mt-0.5">{username}'s watching breakdown</p>
@@ -345,7 +345,7 @@ const Stats = () => {
             label="Total Anime"
             value={series.length}
             sub={`+ ${movies.length} movie${movies.length !== 1 ? 's' : ''}`}
-            gradient="bg-gradient-to-br from-[#E67E22] to-[#f39c12]"
+            gradient="bg-gradient-to-br from-[var(--primary)] to-[var(--primary-light)]"
           />
           <MetricCard
             icon="play_circle"
@@ -418,7 +418,7 @@ const Stats = () => {
             {longest?.episodes > 0 ? (
               <>
                 <p className="font-semibold text-gray-700 text-sm truncate mb-1">{longest.name}</p>
-                <p className="text-3xl font-bold text-[#E67E22]">{longest.episodes.toLocaleString()}</p>
+                <p className="text-3xl font-bold text-[var(--primary)]">{longest.episodes.toLocaleString()}</p>
                 <p className="text-xs text-gray-400 mt-0.5">episodes watched</p>
               </>
             ) : <p className="text-sm text-gray-400">No data yet</p>}
@@ -426,7 +426,7 @@ const Stats = () => {
 
           <div className="bg-white rounded-2xl shadow-sm p-4">
             <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Est. Watch Time</p>
-            <p className="text-3xl font-bold text-[#E67E22]">{watchTimeHours.toLocaleString()}</p>
+            <p className="text-3xl font-bold text-[var(--primary)]">{watchTimeHours.toLocaleString()}</p>
             <p className="text-xs text-gray-400 mt-0.5">hours total</p>
             <p className="text-xs text-gray-500 mt-2 leading-relaxed">
               {series.length} series × 23 min<br />+ {movies.length} movies × 90 min
@@ -438,7 +438,7 @@ const Stats = () => {
             {latest ? (
               <>
                 <p className="font-semibold text-gray-700 text-sm truncate mb-1">{latest.name}</p>
-                <p className="text-lg font-bold text-[#E67E22]">{daysAgo(latest.createdAt)}</p>
+                <p className="text-lg font-bold text-[var(--primary)]">{daysAgo(latest.createdAt)}</p>
                 <p className="text-xs text-gray-400 mt-0.5">
                   {new Date(latest.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </p>
@@ -462,7 +462,7 @@ const Stats = () => {
                       {i < 3 ? MEDAL[i] : <span className="text-xs text-gray-400">{i + 1}.</span>}
                     </span>
                     <p className="flex-1 text-sm text-gray-700 truncate">{e.name}</p>
-                    <span className="text-sm font-bold text-[#E67E22] flex-shrink-0">★ {e.rating}/10</span>
+                    <span className="text-sm font-bold text-[var(--primary)] flex-shrink-0">★ {e.rating}/10</span>
                   </div>
                 ))}
               </div>
@@ -501,7 +501,7 @@ const Stats = () => {
             <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Rating Overview</h2>
             <div className="flex items-center gap-8 flex-wrap">
               <div className="text-center">
-                <p className="text-4xl font-bold text-[#E67E22]">{avgRating}</p>
+                <p className="text-4xl font-bold text-[var(--primary)]">{avgRating}</p>
                 <p className="text-xs text-gray-400 mt-1">avg rating / 10</p>
               </div>
               <div className="flex-1 min-w-0">
@@ -520,7 +520,7 @@ const Stats = () => {
                             className="w-full rounded-t transition-all duration-500"
                             style={{
                               height: `${Math.max((count / maxDist) * 100, count > 0 ? 10 : 4)}%`,
-                              background: count > 0 ? '#E67E22' : '#e5e7eb',
+                              background: count > 0 ? 'var(--primary)' : '#e5e7eb',
                             }}
                           />
                           <span className="text-[9px] text-gray-400">{score}</span>
@@ -544,14 +544,14 @@ const Stats = () => {
             <div className="flex items-center gap-1.5 text-xs text-gray-400">
               <span>{genreProgress.loaded} / {genreProgress.total} entries</span>
               {genreProgress.loaded < genreProgress.total && (
-                <span className="w-2 h-2 rounded-full bg-[#E67E22] animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-[var(--primary)] animate-pulse" />
               )}
             </div>
           </div>
 
           {sortedGenres.length === 0 ? (
             <div className="flex items-center gap-2 text-sm text-gray-400 py-2">
-              <div className="w-4 h-4 border-2 border-gray-300 border-t-[#E67E22] rounded-full animate-spin flex-shrink-0" />
+              <div className="w-4 h-4 border-2 border-gray-300 border-t-[var(--primary)] rounded-full animate-spin flex-shrink-0" />
               Loading genre data… This speeds up as you open anime detail modals.
             </div>
           ) : (

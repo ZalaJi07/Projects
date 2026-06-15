@@ -218,7 +218,7 @@ const Manager = () => {
   }
 
   return (
-    <div ref={scrollContainerRef} className="flex justify-center bg-[#ECF0F1] flex-grow overflow-auto">
+    <div ref={scrollContainerRef} className="flex justify-center bg-[var(--bg)] flex-grow overflow-auto">
       <div className="w-[95vw] md:w-[60vw] flex flex-col py-2 px-1 sm:px-0">
         <ManagerHeader />
 
@@ -227,8 +227,8 @@ const Manager = () => {
           <button
             onClick={() => setActiveTab("series")}
             className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${activeTab === "series"
-              ? "bg-[#E67E22] text-white"
-              : "bg-white text-gray-600 hover:bg-orange-50"
+              ? "bg-[var(--primary)] text-white"
+              : "bg-white text-gray-600 hover:bg-[var(--row-bg)]"
               }`}
           >
             Series
@@ -236,8 +236,8 @@ const Manager = () => {
           <button
             onClick={() => setActiveTab("movie")}
             className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${activeTab === "movie"
-              ? "bg-[#E67E22] text-white"
-              : "bg-white text-gray-600 hover:bg-orange-50"
+              ? "bg-[var(--primary)] text-white"
+              : "bg-white text-gray-600 hover:bg-[var(--row-bg)]"
               }`}
           >
             Movies
@@ -261,7 +261,7 @@ const Manager = () => {
         <div className="flex flex-wrap items-center gap-2 my-2">
           {/* Search in your list */}
           <div className="flex items-center gap-1 w-full sm:flex-1 sm:min-w-[150px]">
-            <span className="material-symbols-outlined text-[#E67E22] text-xl">search</span>
+            <span className="material-symbols-outlined text-[var(--primary)] text-xl">search</span>
             <input
               key={activeTab}
               type="text"
@@ -269,21 +269,21 @@ const Manager = () => {
               value={listSearchDisplay}
               onChange={handleListSearchChange}
               className="border border-gray-300 bg-white rounded-lg px-3 py-1.5 text-sm w-full
-                     shadow-sm hover:border-[#E67E22] focus:outline-none focus:ring-2 
-                     focus:ring-[#E67E22] transition"
+                     shadow-sm hover:border-[var(--primary)] focus:outline-none focus:ring-2 
+                     focus:ring-[var(--primary)] transition"
             />
           </div>
 
           {/* Filter by Status — only for series */}
           {activeTab === "series" && (
             <div className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-[#E67E22] text-xl">filter_alt</span>
+              <span className="material-symbols-outlined text-[var(--primary)] text-xl">filter_alt</span>
               <select
                 value={filterStatus}
                 onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
                 className="border border-gray-300 bg-white rounded-lg px-2 sm:px-3 py-1.5 text-sm
-                       shadow-sm hover:border-[#E67E22] focus:outline-none focus:ring-2 
-                       focus:ring-[#E67E22] transition"
+                       shadow-sm hover:border-[var(--primary)] focus:outline-none focus:ring-2 
+                       focus:ring-[var(--primary)] transition"
               >
                 <option value="All">All</option>
                 <option value="Finished">Finished</option>
@@ -298,10 +298,10 @@ const Manager = () => {
 
           {/* Sort buttons */}
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[#E67E22] text-xl hidden sm:inline">sort</span>
+            <span className="material-symbols-outlined text-[var(--primary)] text-xl hidden sm:inline">sort</span>
             <button
               onClick={() => toggleSort("name")}
-              className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "name" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"
+              className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "name" ? "bg-[var(--primary)] text-white border-[var(--primary)]" : "bg-white border-gray-300 hover:border-[var(--primary)]"
                 }`}
             >
               Name {sortField === "name" && (sortOrder === "asc" ? "↑" : "↓")}
@@ -309,7 +309,7 @@ const Manager = () => {
             {activeTab === "series" && (
               <button
                 onClick={() => toggleSort("episodes")}
-                className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "episodes" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"
+                className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "episodes" ? "bg-[var(--primary)] text-white border-[var(--primary)]" : "bg-white border-gray-300 hover:border-[var(--primary)]"
                   }`}
               >
                 Ep {sortField === "episodes" && (sortOrder === "asc" ? "↑" : "↓")}
@@ -317,7 +317,7 @@ const Manager = () => {
             )}
             <button
               onClick={() => toggleSort("createdAt")}
-              className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "createdAt" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"
+              className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "createdAt" ? "bg-[var(--primary)] text-white border-[var(--primary)]" : "bg-white border-gray-300 hover:border-[var(--primary)]"
                 }`}
             >
               Date {sortField === "createdAt" && (sortOrder === "asc" ? "↑" : "↓")}
@@ -336,16 +336,16 @@ const Manager = () => {
             <div className="space-y-0">
               {/* Skeleton shimmer rows */}
               {[...Array(8)].map((_, i) => (
-                <div key={i} className="flex items-center gap-3 px-3 py-3 bg-orange-50 border-b border-orange-100 animate-pulse">
-                  <div className="w-8 h-11 rounded bg-orange-200/60 flex-shrink-0"></div>
+                <div key={i} className="flex items-center gap-3 px-3 py-3 border-b animate-pulse" style={{ background: 'var(--row-bg)', borderColor: 'var(--row-border)' }}>
+                  <div className="w-8 h-11 rounded flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--row-hover) 60%, transparent)' }}></div>
                   <div className="flex-1 space-y-2">
-                    <div className="h-3.5 bg-orange-200/60 rounded-full w-[60%]"></div>
-                    <div className="h-2.5 bg-orange-200/40 rounded-full w-[35%]"></div>
+                    <div className="h-3.5 rounded-full w-[60%]" style={{ background: 'color-mix(in srgb, var(--row-hover) 60%, transparent)' }}></div>
+                    <div className="h-2.5 rounded-full w-[35%]" style={{ background: 'color-mix(in srgb, var(--row-hover) 40%, transparent)' }}></div>
                   </div>
                   <div className="hidden md:flex items-center gap-4">
-                    <div className="h-3 bg-orange-200/40 rounded-full w-16"></div>
-                    <div className="h-3 bg-orange-200/40 rounded-full w-10"></div>
-                    <div className="h-3 bg-orange-200/40 rounded-full w-10"></div>
+                    <div className="h-3 rounded-full w-16" style={{ background: 'color-mix(in srgb, var(--row-hover) 40%, transparent)' }}></div>
+                    <div className="h-3 rounded-full w-10" style={{ background: 'color-mix(in srgb, var(--row-hover) 40%, transparent)' }}></div>
+                    <div className="h-3 rounded-full w-10" style={{ background: 'color-mix(in srgb, var(--row-hover) 40%, transparent)' }}></div>
                   </div>
                 </div>
               ))}
@@ -355,11 +355,11 @@ const Manager = () => {
               {listSearch || filterStatus !== "All" ? (
                 <>
                   <div className="flex justify-center mb-4">
-                    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="50" cy="50" r="30" stroke="#E67E22" strokeWidth="4" strokeOpacity="0.3" fill="#FFF7ED" />
-                      <line x1="72" y1="72" x2="100" y2="100" stroke="#E67E22" strokeWidth="4" strokeLinecap="round" strokeOpacity="0.3" />
-                      <line x1="38" y1="38" x2="62" y2="62" stroke="#E67E22" strokeWidth="3" strokeLinecap="round" strokeOpacity="0.5" />
-                      <line x1="62" y1="38" x2="38" y2="62" stroke="#E67E22" strokeWidth="3" strokeLinecap="round" strokeOpacity="0.5" />
+                    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: 'var(--primary)' }}>
+                      <circle cx="50" cy="50" r="30" stroke="currentColor" strokeWidth="4" strokeOpacity="0.3" fill="var(--row-bg)" />
+                      <line x1="72" y1="72" x2="100" y2="100" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeOpacity="0.3" />
+                      <line x1="38" y1="38" x2="62" y2="62" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeOpacity="0.5" />
+                      <line x1="62" y1="38" x2="38" y2="62" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeOpacity="0.5" />
                     </svg>
                   </div>
                   <p className="text-lg font-semibold text-gray-500">No results found</p>
@@ -368,20 +368,20 @@ const Manager = () => {
               ) : activeTab === "movie" ? (
                 <>
                   <div className="flex justify-center mb-4">
-                    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="20" y="25" width="80" height="60" rx="8" fill="#FFF7ED" stroke="#E67E22" strokeWidth="3" strokeOpacity="0.4" />
-                      <rect x="25" y="30" width="10" height="10" rx="2" fill="#E67E22" fillOpacity="0.2" />
-                      <rect x="25" y="45" width="10" height="10" rx="2" fill="#E67E22" fillOpacity="0.2" />
-                      <rect x="25" y="60" width="10" height="10" rx="2" fill="#E67E22" fillOpacity="0.2" />
-                      <rect x="85" y="30" width="10" height="10" rx="2" fill="#E67E22" fillOpacity="0.2" />
-                      <rect x="85" y="45" width="10" height="10" rx="2" fill="#E67E22" fillOpacity="0.2" />
-                      <rect x="85" y="60" width="10" height="10" rx="2" fill="#E67E22" fillOpacity="0.2" />
-                      <polygon points="52,42 52,68 72,55" fill="#E67E22" fillOpacity="0.4" />
-                      <circle cx="85" cy="95" r="12" fill="#FFF7ED" stroke="#E67E22" strokeWidth="2" strokeOpacity="0.3" />
-                      <rect x="81" y="85" width="8" height="5" rx="1" fill="#E67E22" fillOpacity="0.3" />
-                      <circle cx="82" cy="93" r="1.5" fill="#E67E22" fillOpacity="0.4" />
-                      <circle cx="88" cy="93" r="1.5" fill="#E67E22" fillOpacity="0.4" />
-                      <circle cx="85" cy="97" r="1.5" fill="#E67E22" fillOpacity="0.4" />
+                    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: 'var(--primary)' }}>
+                      <rect x="20" y="25" width="80" height="60" rx="8" fill="var(--row-bg)" stroke="currentColor" strokeWidth="3" strokeOpacity="0.4" />
+                      <rect x="25" y="30" width="10" height="10" rx="2" fill="currentColor" fillOpacity="0.2" />
+                      <rect x="25" y="45" width="10" height="10" rx="2" fill="currentColor" fillOpacity="0.2" />
+                      <rect x="25" y="60" width="10" height="10" rx="2" fill="currentColor" fillOpacity="0.2" />
+                      <rect x="85" y="30" width="10" height="10" rx="2" fill="currentColor" fillOpacity="0.2" />
+                      <rect x="85" y="45" width="10" height="10" rx="2" fill="currentColor" fillOpacity="0.2" />
+                      <rect x="85" y="60" width="10" height="10" rx="2" fill="currentColor" fillOpacity="0.2" />
+                      <polygon points="52,42 52,68 72,55" fill="currentColor" fillOpacity="0.4" />
+                      <circle cx="85" cy="95" r="12" fill="var(--row-bg)" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
+                      <rect x="81" y="85" width="8" height="5" rx="1" fill="currentColor" fillOpacity="0.3" />
+                      <circle cx="82" cy="93" r="1.5" fill="currentColor" fillOpacity="0.4" />
+                      <circle cx="88" cy="93" r="1.5" fill="currentColor" fillOpacity="0.4" />
+                      <circle cx="85" cy="97" r="1.5" fill="currentColor" fillOpacity="0.4" />
                     </svg>
                   </div>
                   <p className="text-lg font-semibold text-gray-500">No movies yet</p>
@@ -390,16 +390,16 @@ const Manager = () => {
               ) : (
                 <>
                   <div className="flex justify-center mb-4">
-                    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="30" y="40" width="50" height="65" rx="4" fill="#FDBA74" fillOpacity="0.15" stroke="#E67E22" strokeWidth="2.5" strokeOpacity="0.3" transform="rotate(-6 30 40)" />
-                      <rect x="35" y="35" width="50" height="65" rx="4" fill="#FFF7ED" stroke="#E67E22" strokeWidth="2.5" strokeOpacity="0.4" />
-                      <line x1="45" y1="50" x2="75" y2="50" stroke="#E67E22" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.3" />
-                      <line x1="45" y1="58" x2="70" y2="58" stroke="#E67E22" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.2" />
-                      <line x1="45" y1="66" x2="72" y2="66" stroke="#E67E22" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.2" />
-                      <line x1="45" y1="74" x2="65" y2="74" stroke="#E67E22" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.15" />
-                      <circle cx="85" cy="35" r="16" fill="#FFF7ED" stroke="#E67E22" strokeWidth="2.5" strokeOpacity="0.4" />
-                      <line x1="85" y1="28" x2="85" y2="42" stroke="#E67E22" strokeWidth="2.5" strokeLinecap="round" strokeOpacity="0.4" />
-                      <line x1="78" y1="35" x2="92" y2="35" stroke="#E67E22" strokeWidth="2.5" strokeLinecap="round" strokeOpacity="0.4" />
+                    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: 'var(--primary)' }}>
+                      <rect x="30" y="40" width="50" height="65" rx="4" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="2.5" strokeOpacity="0.3" transform="rotate(-6 30 40)" />
+                      <rect x="35" y="35" width="50" height="65" rx="4" fill="var(--row-bg)" stroke="currentColor" strokeWidth="2.5" strokeOpacity="0.4" />
+                      <line x1="45" y1="50" x2="75" y2="50" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.3" />
+                      <line x1="45" y1="58" x2="70" y2="58" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.2" />
+                      <line x1="45" y1="66" x2="72" y2="66" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.2" />
+                      <line x1="45" y1="74" x2="65" y2="74" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.15" />
+                      <circle cx="85" cy="35" r="16" fill="var(--row-bg)" stroke="currentColor" strokeWidth="2.5" strokeOpacity="0.4" />
+                      <line x1="85" y1="28" x2="85" y2="42" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeOpacity="0.4" />
+                      <line x1="78" y1="35" x2="92" y2="35" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeOpacity="0.4" />
                     </svg>
                   </div>
                   <p className="text-lg font-semibold text-gray-500">Your anime list is empty</p>
@@ -456,7 +456,7 @@ const Manager = () => {
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
                 className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-300 
-                 hover:border-[#E67E22] hover:bg-orange-50 disabled:opacity-40 disabled:cursor-not-allowed transition text-sm"
+                 hover:border-[var(--primary)] hover:bg-[var(--row-bg)] disabled:opacity-40 disabled:cursor-not-allowed transition text-sm"
               >
                 <span className="material-symbols-outlined text-base">chevron_left</span>
               </button>
@@ -472,8 +472,8 @@ const Manager = () => {
                     onClick={() => setPage(item)}
                     className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition
               ${currentPage === item
-                        ? "bg-[#E67E22] text-white shadow-sm"
-                        : "border border-gray-300 text-gray-600 hover:border-[#E67E22] hover:bg-orange-50"
+                        ? "bg-[var(--primary)] text-white shadow-sm"
+                        : "border border-gray-300 text-gray-600 hover:border-[var(--primary)] hover:bg-[var(--row-bg)]"
                       }`}
                   >
                     {item}
@@ -485,7 +485,7 @@ const Manager = () => {
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
                 className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-300 
-                 hover:border-[#E67E22] hover:bg-orange-50 disabled:opacity-40 disabled:cursor-not-allowed transition text-sm"
+                 hover:border-[var(--primary)] hover:bg-[var(--row-bg)] disabled:opacity-40 disabled:cursor-not-allowed transition text-sm"
               >
                 <span className="material-symbols-outlined text-base">chevron_right</span>
               </button>

@@ -97,7 +97,7 @@ export const googleSignIn = async (req, res) => {
 }
 
 export const updateProfile = async (req, res) => {
-    const { username, currentPassword, newPassword } = req.body;
+    const { username, currentPassword, newPassword, theme } = req.body;
 
     try {
         const user = await User.findById(req.userId);
@@ -125,6 +125,12 @@ export const updateProfile = async (req, res) => {
                 return res.status(400).json({ message: "New password must be at least 6 characters." });
             }
             user.password = await bcrypt.hash(newPassword, 12);
+        }
+
+        // ── Theme change ──
+        const VALID_THEMES = ['orange', 'ocean', 'emerald', 'violet', 'rose'];
+        if (theme && VALID_THEMES.includes(theme)) {
+            user.theme = theme;
         }
 
         await user.save();

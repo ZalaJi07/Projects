@@ -69,7 +69,7 @@ const PublicList = () => {
 
     if (error) {
         return (
-            <div className="flex flex-grow items-center justify-center bg-[#ECF0F1]">
+            <div className="flex flex-grow items-center justify-center bg-[var(--bg)]">
                 <div className="text-center">
                     <span className="material-symbols-outlined text-6xl text-gray-300 mb-4">person_off</span>
                     <p className="text-xl font-semibold text-gray-500">{error}</p>
@@ -80,12 +80,12 @@ const PublicList = () => {
     }
 
     return (
-        <div className="flex justify-center bg-[#ECF0F1] flex-grow overflow-auto">
+        <div className="flex justify-center bg-[var(--bg)] flex-grow overflow-auto">
             <div className="w-[95vw] md:w-[60vw] flex flex-col py-2 px-1 sm:px-0">
                 {/* Header */}
                 <div className="flex items-center justify-between py-3">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#E67E22] flex items-center justify-center font-bold text-white uppercase text-lg">
+                        <div className="w-10 h-10 rounded-full bg-[var(--primary)] flex items-center justify-center font-bold text-white uppercase text-lg">
                             {(displayName || username)[0]}
                         </div>
                         <div>
@@ -101,10 +101,10 @@ const PublicList = () => {
                                 const statsUrl = `${window.location.origin}/list/${username}/stats`;
                                 navigator.clipboard.writeText(statsUrl)
                                     .then(() => toast.success("Stats link copied!"))
-                                    .catch(() => {});
+                                    .catch(() => { });
                                 navigate(`/list/${username}/stats`);
                             }}
-                            className="flex items-center gap-1 px-2.5 py-1 text-xs text-gray-600 border border-gray-300 rounded-full hover:border-[#E67E22] hover:text-[#E67E22] transition"
+                            className="flex items-center gap-1 px-2.5 py-1 text-xs text-gray-600 border border-gray-300 rounded-full hover:border-[var(--primary)] hover:text-[var(--primary)] transition"
                             title="Copy link to public stats"
                         >
                             <span className="material-symbols-outlined text-sm">bar_chart</span>
@@ -118,14 +118,14 @@ const PublicList = () => {
                 <div className="flex rounded-lg overflow-hidden border border-gray-300 mb-3 self-center">
                     <button
                         onClick={() => setActiveTab("series")}
-                        className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${activeTab === "series" ? "bg-[#E67E22] text-white" : "bg-white text-gray-600 hover:bg-orange-50"
+                        className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${activeTab === "series" ? "bg-[var(--primary)] text-white" : "bg-white text-gray-600 hover:bg-[var(--row-bg)]"}
                             }`}
                     >
                         Series
                     </button>
                     <button
                         onClick={() => setActiveTab("movie")}
-                        className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${activeTab === "movie" ? "bg-[#E67E22] text-white" : "bg-white text-gray-600 hover:bg-orange-50"
+                        className={`px-5 sm:px-8 py-2 text-sm font-semibold transition ${activeTab === "movie" ? "bg-[var(--primary)] text-white" : "bg-white text-gray-600 hover:bg-[var(--row-bg)]"}
                             }`}
                     >
                         Movies
@@ -135,21 +135,21 @@ const PublicList = () => {
                 {/* Search, Filter & Sort */}
                 <div className="flex flex-wrap items-center gap-2 my-2">
                     <div className="flex items-center gap-1 w-full sm:flex-1 sm:min-w-[150px]">
-                        <span className="material-symbols-outlined text-[#E67E22] text-xl">search</span>
+                        <span className="material-symbols-outlined text-[var(--primary)] text-xl">search</span>
                         <input
                             type="text"
                             placeholder={isMovie ? "Search movies..." : "Search this list..."}
                             onChange={handleListSearchChange}
-                            className="border border-gray-300 bg-white rounded-lg px-3 py-1.5 text-sm w-full shadow-sm hover:border-[#E67E22] focus:outline-none focus:ring-2 focus:ring-[#E67E22] transition"
+                            className="border border-gray-300 bg-white rounded-lg px-3 py-1.5 text-sm w-full shadow-sm hover:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition"
                         />
                     </div>
                     {!isMovie && (
                         <div className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[#E67E22] text-xl">filter_alt</span>
+                            <span className="material-symbols-outlined text-[var(--primary)] text-xl">filter_alt</span>
                             <select
                                 value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
-                                className="border border-gray-300 bg-white rounded-lg px-2 sm:px-3 py-1.5 text-sm shadow-sm hover:border-[#E67E22] focus:outline-none focus:ring-2 focus:ring-[#E67E22] transition"
+                                className="border border-gray-300 bg-white rounded-lg px-2 sm:px-3 py-1.5 text-sm shadow-sm hover:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition"
                             >
                                 <option value="All">All</option>
                                 <option value="Finished">Finished</option>
@@ -162,24 +162,24 @@ const PublicList = () => {
                         </div>
                     )}
                     <div className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[#E67E22] text-xl hidden sm:inline">sort</span>
+                        <span className="material-symbols-outlined text-[var(--primary)] text-xl hidden sm:inline">sort</span>
                         <button
                             onClick={() => toggleSort("name")}
-                            className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "name" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"}`}
+                            className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "name" ? "bg-[var(--primary)] text-white border-[var(--primary)]" : "bg-white border-gray-300 hover:border-[var(--primary)]"}`}
                         >
                             Name {sortField === "name" && (sortOrder === "asc" ? "↑" : "↓")}
                         </button>
                         {!isMovie && (
                             <button
                                 onClick={() => toggleSort("episodes")}
-                                className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "episodes" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"}`}
+                                className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "episodes" ? "bg-[var(--primary)] text-white border-[var(--primary)]" : "bg-white border-gray-300 hover:border-[var(--primary)]"}`}
                             >
                                 Ep {sortField === "episodes" && (sortOrder === "asc" ? "↑" : "↓")}
                             </button>
                         )}
                         <button
                             onClick={() => toggleSort("createdAt")}
-                            className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "createdAt" ? "bg-[#E67E22] text-white border-[#E67E22]" : "bg-white border-gray-300 hover:border-[#E67E22]"}`}
+                            className={`px-2 py-1 text-xs rounded-lg border transition ${sortField === "createdAt" ? "bg-[var(--primary)] text-white border-[var(--primary)]" : "bg-white border-gray-300 hover:border-[var(--primary)]"}`}
                         >
                             Date {sortField === "createdAt" && (sortOrder === "asc" ? "↑" : "↓")}
                         </button>
@@ -190,7 +190,7 @@ const PublicList = () => {
                 <div className="min-h-[60vh] md:min-h-0 overflow-y-auto md:flex-1">
                     {loading ? (
                         <div className="flex justify-center items-center py-12">
-                            <div className="w-8 h-8 border-4 border-[#E67E22] border-t-transparent rounded-full animate-spin"></div>
+                            <div className="w-8 h-8 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
                         </div>
                     ) : animes.length === 0 ? (
                         <div className="text-center py-12 text-gray-400">
@@ -235,7 +235,7 @@ const PublicList = () => {
                                 onClick={() => setPage(Math.max(1, page - 1))}
                                 disabled={page === 1}
                                 className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-300 
-                         hover:border-[#E67E22] hover:bg-orange-50 disabled:opacity-40 disabled:cursor-not-allowed transition text-sm"
+                         hover:border-[var(--primary)] hover:bg-[var(--row-bg)] disabled:opacity-40 disabled:cursor-not-allowed transition text-sm"
                             >
                                 <span className="material-symbols-outlined text-base">chevron_left</span>
                             </button>
@@ -251,8 +251,8 @@ const PublicList = () => {
                                         onClick={() => setPage(item)}
                                         className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition
                       ${page === item
-                                                ? "bg-[#E67E22] text-white shadow-sm"
-                                                : "border border-gray-300 text-gray-600 hover:border-[#E67E22] hover:bg-orange-50"
+                                                ? "bg-[var(--primary)] text-white shadow-sm"
+                                                : "border border-gray-300 text-gray-600 hover:border-[var(--primary)] hover:bg-[var(--row-bg)]"
                                             }`}
                                     >
                                         {item}
@@ -264,7 +264,7 @@ const PublicList = () => {
                                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                                 disabled={page === totalPages}
                                 className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-300 
-                         hover:border-[#E67E22] hover:bg-orange-50 disabled:opacity-40 disabled:cursor-not-allowed transition text-sm"
+                         hover:border-[var(--primary)] hover:bg-[var(--row-bg)] disabled:opacity-40 disabled:cursor-not-allowed transition text-sm"
                             >
                                 <span className="material-symbols-outlined text-base">chevron_right</span>
                             </button>
@@ -274,12 +274,12 @@ const PublicList = () => {
                 {/* {totalPages > 1 && (
                     <div className="flex justify-center items-center gap-2 py-3 flex-shrink-0">
                         <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}
-                            className="px-3 py-1 text-sm rounded-lg border border-gray-300 hover:border-[#E67E22] disabled:opacity-40 disabled:cursor-not-allowed transition">
+                            className="px-3 py-1 text-sm rounded-lg border border-gray-300 hover:border-[var(--primary)] disabled:opacity-40 disabled:cursor-not-allowed transition">
                             ← Prev
                         </button>
                         <span className="text-sm text-gray-600">Page {page} of {totalPages}</span>
                         <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages}
-                            className="px-3 py-1 text-sm rounded-lg border border-gray-300 hover:border-[#E67E22] disabled:opacity-40 disabled:cursor-not-allowed transition">
+                            className="px-3 py-1 text-sm rounded-lg border border-gray-300 hover:border-[var(--primary)] disabled:opacity-40 disabled:cursor-not-allowed transition">
                             Next →
                         </button>
                     </div>

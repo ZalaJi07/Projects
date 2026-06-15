@@ -80,10 +80,10 @@ const AiringCalendar = () => {
     const todayIndex = localDayIndex();
 
     return (
-        <div className="flex-1 overflow-y-auto bg-[#ECF0F1]">
+        <div className="flex-1 overflow-y-auto bg-[var(--bg)]">
 
             {/* Header */}
-            <div className="bg-[#2C3E50] px-4 sm:px-6 pt-5 pb-0 shadow-md">
+            <div className="bg-[var(--surface)] px-4 sm:px-6 pt-5 pb-0 shadow-md">
                 <div className="flex items-center justify-between mb-4">
                     <div>
                         <h1 className="text-xl font-bold text-white">Airing Calendar</h1>
@@ -110,14 +110,14 @@ const AiringCalendar = () => {
                                 className={`
                                     relative flex-shrink-0 px-4 py-2.5 text-sm font-semibold rounded-t-lg transition-all
                                     ${isActive
-                                        ? 'bg-[#ECF0F1] text-[#E67E22]'
+                                        ? 'bg-[var(--bg)] text-[var(--primary)]'
                                         : 'text-white/60 hover:text-white hover:bg-white/10'
                                     }
                                 `}
                             >
                                 {day.label}
                                 {isToday && (
-                                    <span className={`absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full ${isActive ? 'bg-[#E67E22]' : 'bg-[#E67E22]/70'}`} />
+                                    <span className={`absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full ${isActive ? 'bg-[var(--primary)]' : 'bg-[var(--primary)]/70'}`} />
                                 )}
                             </button>
                         );
@@ -130,7 +130,7 @@ const AiringCalendar = () => {
 
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-24 gap-3 text-gray-400">
-                        <span className="w-8 h-8 border-2 border-gray-300 border-t-[#E67E22] rounded-full animate-spin" />
+                        <span className="w-8 h-8 border-2 border-gray-300 border-t-[var(--primary)] rounded-full animate-spin" />
                         <span className="text-sm">Loading schedule...</span>
                     </div>
                 ) : schedule.length === 0 ? (
@@ -172,14 +172,14 @@ const AiringCalendar = () => {
                                             {/* Score badge */}
                                             {anime.score && (
                                                 <div className="absolute top-1.5 left-1.5 bg-black/70 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
-                                                    <span className="material-symbols-outlined text-[#E67E22]" style={{ fontSize: '11px' }}>star</span>
+                                                    <span className="material-symbols-outlined text-[var(--primary)]" style={{ fontSize: '11px' }}>star</span>
                                                     {anime.score}
                                                 </div>
                                             )}
 
                                             {/* In my list badge */}
                                             {inList && (
-                                                <div className="absolute top-1.5 right-1.5 bg-[#E67E22] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md leading-tight">
+                                                <div className="absolute top-1.5 right-1.5 bg-[var(--primary)] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md leading-tight">
                                                     In list
                                                 </div>
                                             )}
@@ -212,7 +212,7 @@ const AiringCalendar = () => {
 
                                             {/* Add button */}
                                             {inList ? (
-                                                <div className="flex items-center justify-center gap-1 py-1.5 rounded-lg bg-orange-50 text-[#E67E22] text-[11px] font-semibold">
+                                                <div className="flex items-center justify-center gap-1 py-1.5 rounded-lg text-[var(--primary)] text-[11px] font-semibold" style={{ background: 'var(--row-bg)' }}>
                                                     <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>check_circle</span>
                                                     In my list
                                                 </div>
@@ -220,7 +220,7 @@ const AiringCalendar = () => {
                                                 <button
                                                     onClick={() => handleQuickAdd(anime)}
                                                     disabled={isAdding}
-                                                    className="flex items-center justify-center gap-1 py-1.5 rounded-lg bg-[#2C3E50] hover:bg-[#E67E22] text-white text-[11px] font-semibold transition-colors disabled:opacity-60"
+                                                    className="flex items-center justify-center gap-1 py-1.5 rounded-lg bg-[var(--surface)] hover:bg-[var(--primary)] text-white text-[11px] font-semibold transition-colors disabled:opacity-60"
                                                 >
                                                     {isAdding ? (
                                                         <span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />

@@ -24,12 +24,12 @@ const AnimeForm = forwardRef(function AnimeForm({ list, handelChange, saveAnime,
                 name="name"
                 placeholder={isMovie ? "Movie Name" : "Anime Name"}
                 autoComplete="off"
-                className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 my-3 w-full focus:ring-2 focus:ring-[#E67E22] outline-none transition"
+                className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 my-3 w-full focus:ring-2 focus:ring-[var(--primary)] outline-none transition"
             />
 
             {/* Search Result Dropdown */}
             {searchResults.length > 0 && (
-                <ul className="absolute top-[100%] left-0 right-0 bg-[#ECF0F1] border border-gray-300 rounded-xl shadow-md max-h-64 overflow-auto z-20 backdrop-blur-sm">
+                <ul className="absolute top-[100%] left-0 right-0 bg-[var(--bg)] border border-gray-300 rounded-xl shadow-md max-h-64 overflow-auto z-20 backdrop-blur-sm">
                     {searchResults.map((anime, index) => (
                         <li
                             key={index}
@@ -41,7 +41,7 @@ const AnimeForm = forwardRef(function AnimeForm({ list, handelChange, saveAnime,
                                 });
                                 setSearchResults([]);
                             }}
-                            className="flex items-center gap-3 p-2 cursor-pointer hover:bg-[#E67E22]/10 transition-all"
+                            className="flex items-center gap-3 p-2 cursor-pointer hover:bg-[var(--primary)]/10 transition-all"
                         >
                             <img
                                 src={anime.images.jpg.image_url}
@@ -69,7 +69,7 @@ const AnimeForm = forwardRef(function AnimeForm({ list, handelChange, saveAnime,
                             onChange={handelChange}
                             name="status"
                             required
-                            className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E67E22] outline-none transition w-full bg-white text-gray-800 appearance-none cursor-pointer"
+                            className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[var(--primary)] outline-none transition w-full bg-white text-gray-800 appearance-none cursor-pointer"
                         >
                             <option value="" disabled>
                                 Status
@@ -92,7 +92,7 @@ const AnimeForm = forwardRef(function AnimeForm({ list, handelChange, saveAnime,
                         type="number"
                         name="episodes"
                         placeholder="Episodes"
-                        className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E67E22] outline-none transition w-full md:w-[32%]"
+                        className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[var(--primary)] outline-none transition w-full md:w-[32%]"
                         autoComplete="off"
                     />
 
@@ -102,7 +102,7 @@ const AnimeForm = forwardRef(function AnimeForm({ list, handelChange, saveAnime,
                         type="number"
                         name="movies"
                         placeholder="Movies"
-                        className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#E67E22] outline-none transition w-full md:w-[32%]"
+                        className="hover:duration-500 hover:scale-105 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[var(--primary)] outline-none transition w-full md:w-[32%]"
                         autoComplete="off"
                     />
                 </div>
@@ -110,7 +110,7 @@ const AnimeForm = forwardRef(function AnimeForm({ list, handelChange, saveAnime,
 
             <button
                 onClick={saveAnime}
-                className="hover:duration-500 hover:scale-105 bg-gradient-to-r from-[#E67E22] to-[#f39c12] hover:opacity-90 transition rounded-full my-4 px-8 py-2 w-full text-white flex justify-center items-center gap-1 font-bold shadow-md"
+                className="hover:duration-500 hover:scale-105 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] hover:opacity-90 transition rounded-full my-4 px-8 py-2 w-full text-white flex justify-center items-center gap-1 font-bold shadow-md"
             >
                 <span className="material-symbols-outlined">save</span>SAVE
             </button>

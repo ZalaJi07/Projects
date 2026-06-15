@@ -7,6 +7,8 @@ const userSchema = mongoose.Schema({
     id: { type: String },
     isAdmin: { type: Boolean, default: false },
     isDisabled: { type: Boolean, default: false },
+    // 'orange' | 'ocean' | 'emerald' | 'violet' | 'rose'
+    theme: { type: String, default: 'orange' },
     // Global monthly episode activity — one total count per month, updated on every +/- press
     // Format: [{ month: "2026-06", count: 14 }]
     episodeLog: { type: [{ month: String, count: Number }], default: [] },

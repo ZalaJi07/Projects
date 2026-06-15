@@ -44,9 +44,9 @@ const ServerWakeUp = ({ children }) => {
     <div className="fixed inset-0 bg-[#1a1a2e] flex flex-col items-center justify-center z-[9999] text-white">
       {/* Animated logo area */}
       <div className="relative mb-8">
-        <div className="w-20 h-20 rounded-full border-4 border-[#E67E22]/30 flex items-center justify-center">
-          <div className="w-20 h-20 rounded-full border-4 border-transparent border-t-[#E67E22] animate-spin absolute"></div>
-          <span className="material-symbols-outlined text-[#E67E22] text-3xl">dns</span>
+        <div className="w-20 h-20 rounded-full border-4 border-[var(--primary)]/30 flex items-center justify-center">
+          <div className="w-20 h-20 rounded-full border-4 border-transparent border-t-[var(--primary)] animate-spin absolute"></div>
+          <span className="material-symbols-outlined text-[var(--primary)] text-3xl">dns</span>
         </div>
       </div>
 
@@ -62,9 +62,9 @@ const ServerWakeUp = ({ children }) => {
 
       {/* Progress dots */}
       <div className="flex gap-2">
-        <div className="w-2 h-2 rounded-full bg-[#E67E22] animate-bounce" style={{ animationDelay: "0ms" }}></div>
-        <div className="w-2 h-2 rounded-full bg-[#E67E22] animate-bounce" style={{ animationDelay: "150ms" }}></div>
-        <div className="w-2 h-2 rounded-full bg-[#E67E22] animate-bounce" style={{ animationDelay: "300ms" }}></div>
+        <div className="w-2 h-2 rounded-full bg-[var(--primary)] animate-bounce" style={{ animationDelay: "0ms" }}></div>
+        <div className="w-2 h-2 rounded-full bg-[var(--primary)] animate-bounce" style={{ animationDelay: "150ms" }}></div>
+        <div className="w-2 h-2 rounded-full bg-[var(--primary)] animate-bounce" style={{ animationDelay: "300ms" }}></div>
       </div>
 
       {serverStatus === "sleeping" && (

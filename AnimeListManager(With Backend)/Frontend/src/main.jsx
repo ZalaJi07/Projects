@@ -10,23 +10,20 @@ import { thunk } from 'redux-thunk'
 
 import { BrowserRouter } from 'react-router-dom'
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { ThemeProvider } from './context/ThemeContext.jsx'
 
 
 const store = createStore(reducers, compose(applyMiddleware(thunk)));
-
-// ReactDOM.createRoot(document.getElementById('root')).render(
-//   <React.StrictMode>
-//     <App />
-//   </React.StrictMode>,
-// )
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <Provider store={store}>
       <BrowserRouter>
-      <GoogleOAuthProvider clientId="73935396054-qmemd0u8su3psifa5aji969stcnoggej.apps.googleusercontent.com">
-        <App />
-      </GoogleOAuthProvider>
+        <GoogleOAuthProvider clientId="73935396054-qmemd0u8su3psifa5aji969stcnoggej.apps.googleusercontent.com">
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
+        </GoogleOAuthProvider>
       </BrowserRouter>
     </Provider>
   </React.StrictMode>

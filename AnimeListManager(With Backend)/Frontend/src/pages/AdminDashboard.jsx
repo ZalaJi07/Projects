@@ -101,17 +101,17 @@ const AdminDashboard = () => {
     };
 
     return (
-        <div className="flex-1 overflow-y-auto bg-[#ECF0F1] p-4 sm:p-6">
+        <div className="flex-1 overflow-y-auto bg-[var(--bg)] p-4 sm:p-6">
 
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-[#2C3E50]">Admin Dashboard</h1>
+                    <h1 className="text-2xl font-bold text-[var(--surface)]">Admin Dashboard</h1>
                     <p className="text-sm text-gray-500 mt-0.5">Manage all user accounts</p>
                 </div>
                 <button
                     onClick={() => navigate('/')}
-                    className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-[#E67E22] transition font-medium"
+                    className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-[var(--primary)] transition font-medium"
                 >
                     <span className="material-symbols-outlined text-base">arrow_back</span>
                     Back to My List
@@ -121,10 +121,10 @@ const AdminDashboard = () => {
             {/* Stat cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                 {[
-                    { label: 'Total Users', value: totalItems, icon: 'group', color: 'text-[#2C3E50]' },
+                    { label: 'Total Users', value: totalItems, icon: 'group', color: 'text-[var(--surface)]' },
                     { label: 'Active', value: stats.active, icon: 'check_circle', color: 'text-green-600' },
                     { label: 'Disabled', value: stats.disabled, icon: 'block', color: 'text-red-500' },
-                    { label: 'Admin', value: stats.admin, icon: 'admin_panel_settings', color: 'text-[#E67E22]' },
+                    { label: 'Admin', value: stats.admin, icon: 'admin_panel_settings', color: 'text-[var(--primary)]' },
                 ].map((s) => (
                     <div key={s.label} className="bg-white rounded-xl shadow-sm p-4 flex items-center gap-3">
                         <span className={`material-symbols-outlined text-2xl ${s.color}`}>{s.icon}</span>
@@ -157,7 +157,7 @@ const AdminDashboard = () => {
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                 {loading ? (
                     <div className="flex items-center justify-center py-20 gap-3 text-gray-400">
-                        <span className="w-5 h-5 border-2 border-gray-300 border-t-[#E67E22] rounded-full animate-spin" />
+                        <span className="w-5 h-5 border-2 border-gray-300 border-t-[var(--primary)] rounded-full animate-spin" />
                         Loading users...
                     </div>
                 ) : users.length === 0 ? (
@@ -186,7 +186,7 @@ const AdminDashboard = () => {
                                             {/* Username + avatar */}
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-2.5">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold uppercase text-white flex-shrink-0 ${user.isAdmin ? 'bg-[#E67E22]' : user.isDisabled ? 'bg-gray-300' : 'bg-[#2C3E50]'}`}>
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold uppercase text-white flex-shrink-0 ${user.isAdmin ? 'bg-[var(--primary)]' : user.isDisabled ? 'bg-gray-300' : 'bg-[var(--surface)]'}`}>
                                                         {user.username?.[0] || '?'}
                                                     </div>
                                                     <a className="font-medium text-gray-800 truncate max-w-[100px]" href={`http://animelistmanager.netlify.app/list/${user.username}`} target="_blank">{user.username}</a>
@@ -201,13 +201,13 @@ const AdminDashboard = () => {
                                                 {formatDate(user.createdAt)}
                                             </td>
                                             {/* Anime count */}
-                                            <td className="px-4 py-3 text-center font-semibold text-[#2C3E50]">
+                                            <td className="px-4 py-3 text-center font-semibold text-[var(--surface)]">
                                                 {user.animeCount}
                                             </td>
                                             {/* Status badge */}
                                             <td className="px-4 py-3">
                                                 {user.isAdmin ? (
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-100 text-[#E67E22] text-xs font-semibold">
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[var(--primary)] text-xs font-semibold" style={{ background: 'var(--row-border)' }}>
                                                         Admin
                                                     </span>
                                                 ) : user.isDisabled ? (
@@ -231,7 +231,7 @@ const AdminDashboard = () => {
                                                             onClick={() => handleDisable(user)}
                                                             disabled={isBusy}
                                                             title={user.isDisabled ? 'Enable account' : 'Disable account'}
-                                                            className={`p-1.5 rounded-lg transition disabled:opacity-50 ${user.isDisabled ? 'hover:bg-green-50 text-green-500' : 'hover:bg-orange-50 text-orange-500'}`}
+                                                            className={`p-1.5 rounded-lg transition disabled:opacity-50 ${user.isDisabled ? 'hover:bg-green-50 text-green-500' : 'hover:bg-[var(--row-bg)] text-[var(--primary)]'}`}
                                                         >
                                                             {isBusy ? (
                                                                 <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin inline-block" />

@@ -4,12 +4,12 @@ import { fetchPublicStats } from '../api/index.js';
 
 // ── Status colour palette ─────────────────────────────────────────────────────
 const STATUS_CFG = {
-  Finished:  { color: '#22c55e', label: 'Finished'  },
-  CaughtUp:  { color: '#a855f7', label: 'Caught Up' },
-  Watching:  { color: '#3b82f6', label: 'Watching'  },
-  OnHold:    { color: '#eab308', label: 'On Hold'   },
-  Pending:   { color: '#94a3b8', label: 'Pending'   },
-  Dropped:   { color: '#ef4444', label: 'Dropped'   },
+  Finished: { color: '#22c55e', label: 'Finished' },
+  CaughtUp: { color: '#a855f7', label: 'Caught Up' },
+  Watching: { color: '#3b82f6', label: 'Watching' },
+  OnHold: { color: '#eab308', label: 'On Hold' },
+  Pending: { color: '#94a3b8', label: 'Pending' },
+  Dropped: { color: '#ef4444', label: 'Dropped' },
 };
 
 // ── SVG Donut ─────────────────────────────────────────────────────────────────
@@ -78,13 +78,13 @@ const PublicStats = () => {
   }, [username]);
 
   if (loading) return (
-    <div className="flex-1 flex items-center justify-center bg-[#ECF0F1]">
-      <div className="w-10 h-10 border-4 border-[#E67E22] border-t-transparent rounded-full animate-spin" />
+    <div className="flex-1 flex items-center justify-center bg-[var(--bg)]">
+      <div className="w-10 h-10 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
     </div>
   );
 
   if (error) return (
-    <div className="flex-1 flex flex-col items-center justify-center bg-[#ECF0F1] gap-3 text-center p-8">
+    <div className="flex-1 flex flex-col items-center justify-center bg-[var(--bg)] gap-3 text-center p-8">
       <span className="material-symbols-outlined text-6xl text-gray-300">bar_chart</span>
       <p className="text-lg font-semibold text-gray-500">{error}</p>
     </div>
@@ -101,14 +101,14 @@ const PublicStats = () => {
   const completionRate = totalSeries > 0 ? Math.round((completed / totalSeries) * 100) : 0;
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#ECF0F1]">
+    <div className="flex-1 overflow-y-auto bg-[var(--bg)]">
 
       {/* Header */}
-      <div className="bg-[#2C3E50] px-4 sm:px-8 py-6 shadow-md">
+      <div className="bg-[var(--surface)] px-4 sm:px-8 py-6 shadow-md">
         <div className="flex items-center justify-between max-w-3xl mx-auto">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#E67E22]">bar_chart</span>
+              <span className="material-symbols-outlined text-[var(--primary)]">bar_chart</span>
               {displayName}'s Stats
             </h1>
             <p className="text-white/50 text-sm mt-0.5">Public viewing — episode activity is private</p>
@@ -128,10 +128,10 @@ const PublicStats = () => {
         {/* Metric cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { icon: 'video_library',  label: 'Anime',           value: totalSeries,  sub: `+ ${totalMovies} movie${totalMovies !== 1 ? 's' : ''}`, grad: 'from-[#E67E22] to-[#f39c12]' },
-            { icon: 'play_circle',    label: 'Episodes',        value: totalEpisodes.toLocaleString(), sub: `≈ ${watchTimeHours.toLocaleString()} hrs`, grad: 'from-blue-500 to-blue-400' },
-            { icon: 'task_alt',       label: 'Completion',      value: `${completionRate}%`, sub: `${completed} of ${totalSeries} done`, grad: 'from-green-500 to-green-400' },
-            { icon: 'star',           label: 'Avg Rating',      value: avgRating ?? '—', sub: avgRating ? 'out of 10' : 'no ratings yet', grad: 'from-purple-500 to-purple-400' },
+            { icon: 'video_library', label: 'Anime', value: totalSeries, sub: `+ ${totalMovies} movie${totalMovies !== 1 ? 's' : ''}`, grad: 'from-[var(--primary)] to-[var(--primary-light)]' },
+            { icon: 'play_circle', label: 'Episodes', value: totalEpisodes.toLocaleString(), sub: `≈ ${watchTimeHours.toLocaleString()} hrs`, grad: 'from-blue-500 to-blue-400' },
+            { icon: 'task_alt', label: 'Completion', value: `${completionRate}%`, sub: `${completed} of ${totalSeries} done`, grad: 'from-green-500 to-green-400' },
+            { icon: 'star', label: 'Avg Rating', value: avgRating ?? '—', sub: avgRating ? 'out of 10' : 'no ratings yet', grad: 'from-purple-500 to-purple-400' },
           ].map(({ icon, label, value, sub, grad }) => (
             <div key={label} className="bg-white rounded-2xl shadow-sm p-4 flex items-start gap-3 hover:shadow-md transition-shadow">
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br ${grad}`}>
@@ -183,7 +183,7 @@ const PublicStats = () => {
                       {i < 3 ? MEDAL[i] : <span className="text-xs text-gray-400">{i + 1}.</span>}
                     </span>
                     <p className="flex-1 text-sm text-gray-700 truncate">{e.name}</p>
-                    <span className="text-sm font-bold text-[#E67E22] flex-shrink-0">★ {e.rating}/10</span>
+                    <span className="text-sm font-bold text-[var(--primary)] flex-shrink-0">★ {e.rating}/10</span>
                   </div>
                 ))}
               </div>

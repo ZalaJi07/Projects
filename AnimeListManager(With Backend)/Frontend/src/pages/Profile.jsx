@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import toast from 'react-hot-toast';
 import * as api from '../api/index.js';
+import { useTheme } from '../context/ThemeContext.jsx';
 
 // Google accounts were created with the Google sub ID as their password (not bcrypt)
 // so checking for the bcrypt prefix ($2) is a reliable way to detect them
@@ -14,6 +15,8 @@ const isGoogleAccount = (profile) => {
 const Profile = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const { theme, setTheme } = useTheme();
+    const [themeLoading, setThemeLoading] = useState(false);
 
     const profileRaw = JSON.parse(localStorage.getItem('profile') || 'null');
     const user = profileRaw?.result;
@@ -89,14 +92,14 @@ const Profile = () => {
     };
 
     return (
-        <div className="flex-1 overflow-y-auto bg-[#ECF0F1]">
+        <div className="flex-1 overflow-y-auto bg-[var(--bg)]">
 
             {/* Header */}
-            <div className="bg-[#2C3E50] px-4 sm:px-8 py-6 shadow-md">
+            <div className="bg-[var(--surface)] px-4 sm:px-8 py-6 shadow-md">
                 <div className="flex items-center justify-between max-w-2xl mx-auto">
                     <div className="flex items-center gap-4">
                         {/* Avatar */}
-                        <div className="w-14 h-14 rounded-full bg-[#E67E22] flex items-center justify-center font-bold text-2xl uppercase text-white shadow-lg">
+                        <div className="w-14 h-14 rounded-full bg-[var(--primary)] flex items-center justify-center font-bold text-2xl uppercase text-white shadow-lg">
                             {user.username?.[0]}
                         </div>
                         <div>
@@ -131,7 +134,8 @@ const Profile = () => {
                         </div>
                         <div className="flex justify-between items-center py-2">
                             <span className="text-gray-500">Account type</span>
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${isGoogle ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-[#E67E22]'}`}>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${isGoogle ? 'bg-blue-100 text-blue-600' : 'text-[var(--primary)]'}`}
+                                style={isGoogle ? {} : { background: 'var(--row-border)' }}>
                                 {isGoogle ? 'Google' : 'Email'}
                             </span>
                         </div>
@@ -154,12 +158,12 @@ const Profile = () => {
                             minLength={2}
                             maxLength={30}
                             required
-                            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#E67E22] outline-none transition"
+                            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none transition"
                         />
                         <button
                             type="submit"
                             disabled={usernameLoading || !username.trim() || username.trim() === user.username}
-                            className="bg-[#E67E22] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition disabled:opacity-50 flex items-center gap-1.5"
+                            className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition disabled:opacity-50 flex items-center gap-1.5"
                         >
                             {usernameLoading
                                 ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -187,7 +191,7 @@ const Profile = () => {
                                     onChange={(e) => setPwForm({ ...pwForm, currentPassword: e.target.value })}
                                     placeholder="Current password"
                                     required
-                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#E67E22] outline-none transition pr-10"
+                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none transition pr-10"
                                 />
                             </div>
                             <div className="relative">
@@ -197,7 +201,7 @@ const Profile = () => {
                                     onChange={(e) => setPwForm({ ...pwForm, newPassword: e.target.value })}
                                     placeholder="New password (min 6 characters)"
                                     required
-                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#E67E22] outline-none transition"
+                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none transition"
                                 />
                             </div>
                             <div className="relative">
@@ -207,7 +211,7 @@ const Profile = () => {
                                     onChange={(e) => setPwForm({ ...pwForm, confirmPassword: e.target.value })}
                                     placeholder="Confirm new password"
                                     required
-                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#E67E22] outline-none transition"
+                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none transition"
                                 />
                             </div>
 
@@ -217,14 +221,14 @@ const Profile = () => {
                                         type="checkbox"
                                         checked={showPasswords}
                                         onChange={() => setShowPasswords(v => !v)}
-                                        className="accent-[#E67E22]"
+                                        className="accent-[var(--primary)]"
                                     />
                                     Show passwords
                                 </label>
                                 <button
                                     type="submit"
                                     disabled={pwLoading || !pwForm.currentPassword || !pwForm.newPassword || !pwForm.confirmPassword}
-                                    className="bg-[#E67E22] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition disabled:opacity-50 flex items-center gap-1.5"
+                                    className="bg-[var(--primary)] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition disabled:opacity-50 flex items-center gap-1.5"
                                 >
                                     {pwLoading
                                         ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -234,6 +238,48 @@ const Profile = () => {
                             </div>
                         </form>
                     )}
+                </div>
+                {/* Theme picker */}
+                <div className="bg-white rounded-2xl shadow-sm p-5">
+                    <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Appearance</h2>
+                    <div className="flex flex-wrap gap-3">
+                        {[
+                            { key: 'orange',  label: 'Orange Dusk',  primary: '#E67E22', surface: '#2C3E50' },
+                            { key: 'ocean',   label: 'Ocean Blue',   primary: '#3B82F6', surface: '#0F1E35' },
+                            { key: 'emerald', label: 'Emerald',      primary: '#10B981', surface: '#0C1F18' },
+                            { key: 'violet',  label: 'Violet Night', primary: '#8B5CF6', surface: '#1A1033' },
+                            { key: 'rose',    label: 'Rose',         primary: '#F43F5E', surface: '#1C0A12' },
+                        ].map(t => (
+                            <button
+                                key={t.key}
+                                title={t.label}
+                                disabled={themeLoading}
+                                onClick={async () => {
+                                    setThemeLoading(true);
+                                    await setTheme(t.key);
+                                    setThemeLoading(false);
+                                    toast.success(`Theme changed to ${t.label}`);
+                                }}
+                                className="flex flex-col items-center gap-1.5 group disabled:opacity-60"
+                            >
+                                {/* Swatch: two-tone circle showing surface + primary */}
+                                <div
+                                    className="w-11 h-11 rounded-full border-2 transition-all overflow-hidden shadow-sm"
+                                    style={{
+                                        borderColor: theme === t.key ? t.primary : 'transparent',
+                                        boxShadow: theme === t.key ? `0 0 0 2px ${t.primary}40` : undefined,
+                                    }}
+                                >
+                                    <div className="w-full h-1/2" style={{ background: t.surface }} />
+                                    <div className="w-full h-1/2" style={{ background: t.primary }} />
+                                </div>
+                                <span className="text-[10px] text-gray-500 font-medium">{t.label}</span>
+                                {theme === t.key && (
+                                    <span className="material-symbols-outlined text-sm" style={{ color: t.primary }}>check_circle</span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
             </div>

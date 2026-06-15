@@ -112,7 +112,7 @@ const AnimeDetailModal = ({ anime, onClose, readOnly = false }) => {
 
         {loading ? (
           <div className="flex justify-center py-8">
-            <div className="w-6 h-6 border-3 border-[#E67E22] border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-6 h-6 border-3 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : details ? (
           <div className="flex flex-col gap-3">
@@ -134,7 +134,7 @@ const AnimeDetailModal = ({ anime, onClose, readOnly = false }) => {
             {details.genres?.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {details.genres.map((g) => (
-                  <span key={g.mal_id} className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">{g.name}</span>
+                  <span key={g.mal_id} className="px-2 py-0.5 text-xs rounded-full font-medium" style={{ background: 'var(--row-border)', color: 'var(--primary-dark)' }}>{g.name}</span>
                 ))}
               </div>
             )}
@@ -172,7 +172,7 @@ const RatingPicker = ({ anime, readOnly = false }) => {
       <div className="mt-4 pt-3 border-t">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-gray-600">Rating</span>
-          <span className="text-sm font-bold text-[#E67E22]">{anime.rating} / 10</span>
+          <span className="text-sm font-bold text-[var(--primary)]">{anime.rating} / 10</span>
         </div>
       </div>
     );
@@ -199,9 +199,9 @@ const RatingPicker = ({ anime, readOnly = false }) => {
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-semibold text-gray-600">Your rating</span>
         {rating != null && (
-          <span className="text-sm font-bold text-[#E67E22]">{rating} / 10</span>
+          <span className="text-sm font-bold text-[var(--primary)]">{rating} / 10</span>
         )}
-        {saving && <span className="w-3 h-3 border border-[#E67E22] border-t-transparent rounded-full animate-spin" />}
+        {saving && <span className="w-3 h-3 border border-[var(--primary)] border-t-transparent rounded-full animate-spin" />}
       </div>
       <div className="flex items-center gap-1 flex-wrap">
         {Array.from({ length: 11 }, (_, i) => {
@@ -217,10 +217,10 @@ const RatingPicker = ({ anime, readOnly = false }) => {
               onClick={() => save(i)}
               className={`w-8 h-8 rounded-full text-xs font-bold transition-all hover:scale-110 disabled:cursor-not-allowed
                 ${ isSelected
-                    ? 'bg-[#E67E22] text-white shadow-md ring-2 ring-[#E67E22]/40'
+                    ? 'bg-[var(--primary)] text-white shadow-md ring-2 ring-[var(--primary)]/40'
                     : filled
-                    ? 'bg-orange-200 text-[#E67E22]'
-                    : 'bg-gray-100 text-gray-400 hover:bg-orange-100'
+                    ? 'bg-[var(--row-hover)] text-[var(--primary)]'
+                    : 'bg-gray-100 text-gray-400 hover:bg-[var(--row-border)]'
                 }`}
             >
               {i}
@@ -263,7 +263,7 @@ const AnimeCard = ({ item, readOnly, setCurrentId, onEpChange, onSelect, onDelet
 
   return (
     <div
-      className="bg-orange-50 rounded-lg p-3 flex gap-3 shadow-sm hover:shadow-md transition cursor-pointer"
+      className="rounded-lg p-3 flex gap-3 shadow-sm hover:shadow-md transition cursor-pointer" style={{ background: 'var(--row-bg)' }}
       onClick={() => onSelect(item)}
     >
       <AnimeImage malId={item.malId} size="md" />
@@ -271,7 +271,7 @@ const AnimeCard = ({ item, readOnly, setCurrentId, onEpChange, onSelect, onDelet
         <div className="flex items-center gap-2">
           <p className="font-semibold text-gray-800 text-sm truncate">{item.name}</p>
           {item.rating != null && (
-            <span className="text-xs font-bold text-[#E67E22] flex-shrink-0">★ {item.rating}</span>
+            <span className="text-xs font-bold text-[var(--primary)] flex-shrink-0">★ {item.rating}</span>
           )}
         </div>
         {!isMovie && (
@@ -287,12 +287,12 @@ const AnimeCard = ({ item, readOnly, setCurrentId, onEpChange, onSelect, onDelet
                 ) : (
                   <div className="flex items-center gap-1">
                     <span
-                      className="material-symbols-outlined text-sm cursor-pointer hover:text-[#E67E22]"
+                      className="material-symbols-outlined text-sm cursor-pointer hover:text-[var(--primary)]"
                       onClick={() => onEpChange(item, -1)}
                     >remove</span>
                     <span className="font-semibold min-w-[1.5rem] text-center">{item.episodes}</span>
                     <span
-                      className="material-symbols-outlined text-sm cursor-pointer hover:text-[#E67E22]"
+                      className="material-symbols-outlined text-sm cursor-pointer hover:text-[var(--primary)]"
                       onClick={() => onEpChange(item, 1)}
                     >add</span>
                   </div>
@@ -321,7 +321,7 @@ const AnimeCard = ({ item, readOnly, setCurrentId, onEpChange, onSelect, onDelet
 
 // ── Desktop table row for Series ──
 const SeriesRow = ({ item, readOnly, setCurrentId, onEpChange, onSelect, onDelete }) => (
-  <tr className="hover:bg-orange-200 transition cursor-pointer" onClick={() => onSelect(item)}>
+  <tr className="transition cursor-pointer hover:bg-[var(--row-hover)]" onClick={() => onSelect(item)}>
     <td className="text-center border border-white py-1 px-1 w-[2.8rem]">
       <AnimeImage malId={item.malId} />
     </td>
@@ -329,7 +329,7 @@ const SeriesRow = ({ item, readOnly, setCurrentId, onEpChange, onSelect, onDelet
       <div className="flex flex-col items-start gap-0.5 px-1">
         <span>{item.name}</span>
         {item.rating != null && (
-          <span className="text-[11px] font-bold text-[#E67E22]">★ {item.rating}/10</span>
+          <span className="text-[11px] font-bold text-[var(--primary)]">★ {item.rating}/10</span>
         )}
       </div>
     </td>
@@ -363,7 +363,7 @@ const SeriesRow = ({ item, readOnly, setCurrentId, onEpChange, onSelect, onDelet
 
 // ── Desktop table row for Movies (simpler) ──
 const MovieRow = ({ item, readOnly, setCurrentId, dispatch, onSelect, onDelete }) => (
-  <tr className="hover:bg-orange-200 transition cursor-pointer" onClick={() => onSelect(item)}>
+  <tr className="transition cursor-pointer hover:bg-[var(--row-hover)]" onClick={() => onSelect(item)}>
     <td className="text-center border border-white py-1 px-1 w-[2.8rem]">
       <AnimeImage malId={item.malId} />
     </td>
@@ -371,7 +371,7 @@ const MovieRow = ({ item, readOnly, setCurrentId, dispatch, onSelect, onDelete }
       <div className="flex flex-col items-center gap-0.5">
         <span>{item.name}</span>
         {item.rating != null && (
-          <span className="text-[11px] font-bold text-[#E67E22]">★ {item.rating}/10</span>
+          <span className="text-[11px] font-bold text-[var(--primary)]">★ {item.rating}/10</span>
         )}
       </div>
     </td>
@@ -451,7 +451,7 @@ const AnimeTable = ({ animes, setCurrentId, readOnly = false, mode = "series" })
     <>
       {/* Desktop table — hidden on mobile */}
       <table className="table-auto w-full shadow-lg rounded-lg overflow-hidden mb-2 hidden md:table">
-        <thead className="bg-[#E67E22] text-white">
+        <thead className="bg-[var(--primary)] text-white">
           {isMovie ? (
             <tr>
               <th className="border border-white p-2 w-8"></th>
@@ -469,7 +469,7 @@ const AnimeTable = ({ animes, setCurrentId, readOnly = false, mode = "series" })
             </tr>
           )}
         </thead>
-        <tbody className="bg-orange-100">
+        <tbody className="bg-[var(--row-border)]">
           {animes.map((item) =>
             isMovie ? (
               <MovieRow

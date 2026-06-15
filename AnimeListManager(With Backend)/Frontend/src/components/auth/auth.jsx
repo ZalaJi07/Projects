@@ -34,7 +34,7 @@ const Auth = () => {
     }
 
     return (
-        <div className="flex flex-grow items-center justify-center bg-[#ECF0F1]">
+        <div className="flex flex-grow items-center justify-center bg-[var(--bg)]">
             <div className="bg-white p-6 rounded-xl shadow-md w-[90%] max-w-sm">
 
                 {/* Title */}
@@ -47,7 +47,7 @@ const Auth = () => {
                     type="email"
                     name="email"
                     placeholder="Email"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-3 focus:ring-2 focus:ring-[#E67E22] outline-none"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-3 focus:ring-2 focus:ring-[var(--primary)] outline-none"
                     onChange={handleChange}
                 />
 
@@ -57,7 +57,7 @@ const Auth = () => {
                         type="text"
                         name="username"
                         placeholder="Username"
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-3 focus:ring-2 focus:ring-[#E67E22] outline-none"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-3 focus:ring-2 focus:ring-[var(--primary)] outline-none"
                         onChange={handleChange}
                     />
                 )}
@@ -68,7 +68,7 @@ const Auth = () => {
                         type={showPassword ? "text" : "password"}
                         name="password"
                         placeholder="Password"
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-[#E67E22] outline-none"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-[var(--primary)] outline-none"
                         onChange={handleChange}
                     />
                     <span
@@ -86,7 +86,7 @@ const Auth = () => {
                             type={showPassword ? "text" : "password"}
                             name="confirmPassword"
                             placeholder="Confirm Password"
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-[#E67E22] outline-none"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-[var(--primary)] outline-none"
                             onChange={handleChange}
                         />
                     </div>
@@ -94,7 +94,7 @@ const Auth = () => {
 
                 {/* Button */}
                 <button
-                    className="w-full bg-[#E67E22] text-white py-2 rounded-lg font-semibold hover:opacity-90 transition mt-2"
+                    className="w-full bg-[var(--primary)] text-white py-2 rounded-lg font-semibold hover:opacity-90 transition mt-2"
                     onClick={handleSubmit}
                 >
                     {isSignIn ? "Sign In" : "Sign Up"}
@@ -121,7 +121,7 @@ const Auth = () => {
                         <>
                             Don’t have an account?{" "}
                             <span
-                                className="text-[#E67E22] font-semibold cursor-pointer hover:underline"
+                                className="text-[var(--primary)] font-semibold cursor-pointer hover:underline"
                                 onClick={() => setIsSignIn(false)}
                             >
                                 Sign Up
@@ -131,7 +131,7 @@ const Auth = () => {
                         <>
                             Already have an account?{" "}
                             <span
-                                className="text-[#E67E22] font-semibold cursor-pointer hover:underline"
+                                className="text-[var(--primary)] font-semibold cursor-pointer hover:underline"
                                 onClick={() => setIsSignIn(true)}
                             >
                                 Sign In
