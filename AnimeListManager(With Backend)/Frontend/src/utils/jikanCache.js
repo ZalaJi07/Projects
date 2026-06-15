@@ -13,7 +13,9 @@
 const IMG_CACHE_KEY = "jikan_img_cache";
 const CACHE_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-// Full detail objects — in-memory only
+// Full detail objects — in-memory only, but seeded from sessionStorage on startup
+// sessionStorage persists across refreshes in the same tab, clears when tab closes
+const SESSION_DETAIL_KEY = 'jikan_session_details';
 const memoryCache = {};
 
 // Small image URLs — populated from localStorage on startup
@@ -46,6 +48,29 @@ const loadLocalCache = () => {
             localStorage.setItem(IMG_CACHE_KEY, JSON.stringify(cleaned));
         }
     } catch { }
+};
+
+// Seed memoryCache from sessionStorage so genres load instantly on same-session revisits
+const loadSessionCache = () => {
+    try {
+        const raw = sessionStorage.getItem(SESSION_DETAIL_KEY);
+        if (!raw) return;
+        Object.assign(memoryCache, JSON.parse(raw));
+    } catch { }
+};
+
+const saveToSessionCache = (malId, data) => {
+    try {
+        const existing = JSON.parse(sessionStorage.getItem(SESSION_DETAIL_KEY) || '{}');
+        existing[malId] = data;
+        sessionStorage.setItem(SESSION_DETAIL_KEY, JSON.stringify(existing));
+    } catch {
+        // sessionStorage full — clear and retry with just this entry
+        try {
+            sessionStorage.removeItem(SESSION_DETAIL_KEY);
+            sessionStorage.setItem(SESSION_DETAIL_KEY, JSON.stringify({ [malId]: data }));
+        } catch { }
+    }
 };
 
 const saveImageToLocalCache = (malId, data) => {
@@ -100,8 +125,8 @@ const processQueue = async () => {
             const json = await res.json();
             const data = json.data;
 
-            // Full details → memory only (no localStorage bloat)
             memoryCache[malId] = data;
+            saveToSessionCache(malId, data); // persist across refreshes in the same tab
 
             // Image URL → compact localStorage (persistent, tiny footprint)
             const smallUrl = data?.images?.jpg?.small_image_url;
@@ -122,8 +147,9 @@ const processQueue = async () => {
     processing = false;
 };
 
-// Initialize: warm up imageCache from localStorage
+// Initialize: warm up both caches from storage
 loadLocalCache();
+loadSessionCache();
 
 // ── Public API ──
 

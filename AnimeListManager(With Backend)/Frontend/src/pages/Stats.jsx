@@ -6,12 +6,12 @@ import { getAnimeDetails, getCachedDetails } from '../utils/jikanCache.js';
 
 // ── Status colour palette ────────────────────────────────────────────────────
 const STATUS_CFG = {
-  Finished:  { color: '#22c55e', label: 'Finished'  },
-  CaughtUp:  { color: '#a855f7', label: 'Caught Up' },
-  Watching:  { color: '#3b82f6', label: 'Watching'  },
-  OnHold:    { color: '#eab308', label: 'On Hold'   },
-  Pending:   { color: '#94a3b8', label: 'Pending'   },
-  Dropped:   { color: '#ef4444', label: 'Dropped'   },
+  Finished: { color: '#22c55e', label: 'Finished' },
+  CaughtUp: { color: '#a855f7', label: 'Caught Up' },
+  Watching: { color: '#3b82f6', label: 'Watching' },
+  OnHold: { color: '#eab308', label: 'On Hold' },
+  Pending: { color: '#94a3b8', label: 'Pending' },
+  Dropped: { color: '#ef4444', label: 'Dropped' },
 };
 
 // ── SVG Donut chart ──────────────────────────────────────────────────────────
@@ -21,8 +21,8 @@ const polar = (cx, cy, r, deg) => {
 };
 
 const donutPath = (cx, cy, outerR, innerR, start, end) => {
-  const s  = polar(cx, cy, outerR, start);
-  const e  = polar(cx, cy, outerR, end);
+  const s = polar(cx, cy, outerR, start);
+  const e = polar(cx, cy, outerR, end);
   const si = polar(cx, cy, innerR, end);
   const ei = polar(cx, cy, innerR, start);
   const large = end - start > 180 ? 1 : 0;
@@ -120,12 +120,13 @@ const Stats = () => {
   const navigate = useNavigate();
   const profile = JSON.parse(localStorage.getItem('profile') || 'null')?.result;
   const username = profile?.username;
-  const userId   = profile?._id;
+  const userId = profile?._id;
 
-  const [entries,       setEntries]       = useState([]);
-  const [userLog,       setUserLog]       = useState([]);
-  const [loading,       setLoading]       = useState(true);
-  const [genres,        setGenres]        = useState({});
+  const [entries, setEntries] = useState([]);
+  const [userLog, setUserLog] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
+  const [genres, setGenres] = useState({});
   const [genreProgress, setGenreProgress] = useState({ loaded: 0, total: 0 });
 
   // ── Fetch entries + user episodeLog in parallel ──────────────────────────
@@ -138,7 +139,14 @@ const Stats = () => {
         setEntries(animesRes.data.data || []);
         setUserLog(statsRes.data.episodeLog || []);
       })
-      .catch(() => {})
+      .catch((err) => {
+        // 401/403 are handled by the Axios interceptor (clears localStorage + redirects)
+        // Only set error state for genuine failures like network errors or server down
+        const status = err?.response?.status;
+        if (!status || (status !== 401 && status !== 403)) {
+          setFetchError(true);
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -181,10 +189,18 @@ const Stats = () => {
     const hasLogData = monthlyEps.some(m => m.count > 0);
 
     // Top rated
-    const topRated = [...entries]
-      .filter(e => e.rating != null)
-      .sort((a, b) => b.rating - a.rating)
-      .slice(0, 5);
+    // const topRated = [...entries]
+    //   .filter(e => e.rating != null)
+    //   .sort((a, b) => b.rating - a.rating)
+    //   .slice(0, 5);
+    const topRated = (() => {
+      const sorted = [...entries]
+        .filter(e => e.rating != null)
+        .sort((a, b) => b.rating - a.rating);
+
+      const perfect = sorted.filter(e => e.rating === 10);
+      return perfect.length >= 5 ? perfect : sorted.slice(0, 5);
+    })();
 
     // Currently watching
     const watching = series.filter(e => e.status === 'Watching');
@@ -209,6 +225,69 @@ const Stats = () => {
       hasLogData, topRated, watching, longest, latest, daysAgo,
     };
   }, [entries, userLog]);
+
+
+  const TopRated = ({ topRated, MEDAL }) => {
+
+    const [page, setPage] = useState(0);
+    const PAGE_SIZE = 5;
+    const totalPages = Math.ceil(topRated.length / PAGE_SIZE);
+    const visible = topRated.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+
+    return (
+      <div className="bg-white rounded-2xl shadow-sm p-5">
+        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Your Top Rated</h2>
+        {topRated.length === 0 ? (
+          <p className="text-sm text-gray-400">Rate some anime to see your top picks.</p>
+        ) : (
+          <>
+            <div className="flex flex-col gap-3">
+              {visible.map((e, i) => {
+                const globalIndex = page * PAGE_SIZE + i;
+                return (
+                  <div key={e._id || i} className="flex items-center gap-3 min-w-0">
+                    <span className="text-base w-6 text-center flex-shrink-0">
+                      {globalIndex < 3
+                        ? MEDAL[globalIndex]
+                        : <span className="text-xs text-gray-400">{globalIndex + 1}.</span>}
+                    </span>
+                    <p className="flex-1 text-sm text-gray-700 truncate">{e.name}</p>
+                    <span className="text-sm font-bold text-[#E67E22] flex-shrink-0">★ {e.rating}/10</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+                <span className="text-[10px] text-gray-400">
+                  {page * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE + PAGE_SIZE, topRated.length)} of {topRated.length}
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setPage(p => p - 1)}
+                    disabled={page === 0}
+                    className="w-6 h-6 rounded flex items-center justify-center text-gray-400
+                             hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    onClick={() => setPage(p => p + 1)}
+                    disabled={page === totalPages - 1}
+                    className="w-6 h-6 rounded flex items-center justify-center text-gray-400
+                             hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    ▼
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
 
 
   // ── Genre background queue ───────────────────────────────────────────────
@@ -259,16 +338,31 @@ const Stats = () => {
       <div className="bg-[#2C3E50] h-20" />
       <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-5">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {[1,2,3,4].map(i => <Skeleton key={i} className="h-24" />)}
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24" />)}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <Skeleton className="h-64" />
           <Skeleton className="h-64" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {[1,2,3].map(i => <Skeleton key={i} className="h-28" />)}
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-28" />)}
         </div>
       </div>
+    </div>
+  );
+
+  // ── Fetch error (network/server failure — not auth) ───────────────────────
+  if (fetchError) return (
+    <div className="flex-1 flex flex-col items-center justify-center bg-[#ECF0F1] p-8 text-center gap-3">
+      <span className="material-symbols-outlined text-6xl text-gray-300">error</span>
+      <h2 className="text-xl font-bold text-gray-600">Failed to load stats</h2>
+      <p className="text-gray-400 text-sm">Check your connection and try again.</p>
+      <button
+        onClick={() => window.location.reload()}
+        className="mt-2 bg-[#6366f1] text-white px-5 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition"
+      >
+        Retry
+      </button>
     </div>
   );
 
@@ -293,7 +387,7 @@ const Stats = () => {
     hasLogData, topRated, watching, longest, latest, daysAgo,
   } = stats;
 
-  const sortedGenres  = Object.entries(genres).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const sortedGenres = Object.entries(genres).sort((a, b) => b[1] - a[1]).slice(0, 10);
   const maxGenreCount = sortedGenres[0]?.[1] || 1;
   const MEDAL = ['🥇', '🥈', '🥉'];
 
@@ -450,24 +544,7 @@ const Stats = () => {
         {/* ── Row 4 — Top rated + Currently watching ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-          <div className="bg-white rounded-2xl shadow-sm p-5">
-            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Your Top Rated</h2>
-            {topRated.length === 0 ? (
-              <p className="text-sm text-gray-400">Rate some anime to see your top picks.</p>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {topRated.map((e, i) => (
-                  <div key={e._id || i} className="flex items-center gap-3 min-w-0">
-                    <span className="text-base w-6 text-center flex-shrink-0">
-                      {i < 3 ? MEDAL[i] : <span className="text-xs text-gray-400">{i + 1}.</span>}
-                    </span>
-                    <p className="flex-1 text-sm text-gray-700 truncate">{e.name}</p>
-                    <span className="text-sm font-bold text-[#E67E22] flex-shrink-0">★ {e.rating}/10</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <TopRated topRated={topRated} MEDAL={MEDAL} />
 
           <div className="bg-white rounded-2xl shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
@@ -509,23 +586,47 @@ const Stats = () => {
                 {(() => {
                   const dist = Array.from({ length: 11 }, (_, i) => ({
                     score: i,
-                    count: entries.filter(e => e.rating === i).length,
+                    // guard null first — Number(null) === 0 would put unrated entries in bucket 0
+                    count: entries.filter(e => e.rating != null && Number(e.rating) === i).length,
                   }));
                   const maxDist = Math.max(...dist.map(d => d.count), 1);
+                  const BAR_MAX_PX = 64; // max bar height in pixels
                   return (
-                    <div className="flex items-end gap-1 h-12">
-                      {dist.map(({ score, count }) => (
-                        <div key={score} className="flex-1 flex flex-col items-center gap-0.5">
+                    <div>
+                      {/* items-end aligns bars from the bottom baseline */}
+                      <div className="flex gap-1 items-end" style={{ height: '72px' }}>
+                        {dist.map(({ score, count }) => (
                           <div
-                            className="w-full rounded-t transition-all duration-500"
+                            key={score}
+                            className="flex-1 rounded-t transition-all duration-500 relative group"
                             style={{
-                              height: `${Math.max((count / maxDist) * 100, count > 0 ? 10 : 4)}%`,
+                              height: count > 0
+                                ? `${Math.max(Math.round((count / maxDist) * 64), 6)}px`
+                                : '2px',
                               background: count > 0 ? '#E67E22' : '#e5e7eb',
+                              alignSelf: 'flex-end',
                             }}
-                          />
-                          <span className="text-[9px] text-gray-400">{score}</span>
-                        </div>
-                      ))}
+                          >
+                            {/* Tooltip */}
+                            {count > 0 && (
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1
+                        bg-gray-800 text-white text-[10px] rounded px-1.5 py-0.5
+                        opacity-0 group-hover:opacity-100 transition-opacity
+                        pointer-events-none whitespace-nowrap z-10">
+                                {count} {count === 1 ? 'anime' : 'anime'}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      {/* Labels in a separate row so they don't compress the bar area */}
+                      <div className="flex gap-1 mt-1">
+                        {dist.map(({ score }) => (
+                          <div key={score} className="flex-1 text-center">
+                            <span className="text-[9px] text-gray-400">{score}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   );
                 })()}
