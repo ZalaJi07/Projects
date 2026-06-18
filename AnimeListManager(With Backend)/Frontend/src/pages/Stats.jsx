@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import * as api from '../api/index.js';
-import { getAnimeDetails, getCachedDetails } from '../utils/jikanCache.js';
+import { getAnimeDetails, getCachedDetails, getCachedGenres } from '../utils/jikanCache.js';
 
 // ── Status colour palette ────────────────────────────────────────────────────
 const STATUS_CFG = {
@@ -110,7 +110,71 @@ const MetricCard = ({ icon, label, value, sub, gradient }) => (
   </div>
 );
 
-// ── Loading skeleton ─────────────────────────────────────────────────────────
+// ── Loading skeleton ─────────────────────────────────────────────────
+// Defined outside Stats so React keeps a stable component identity across re-renders.
+// If this were inside Stats, every setGenres/setState call would recreate the function,
+// unmount + remount TopRated, and reset the page state to 0.
+const TopRated = ({ topRated, MEDAL }) => {
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 5;
+  const totalPages = Math.ceil(topRated.length / PAGE_SIZE);
+  const visible = topRated.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm p-5">
+      <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Your Top Rated</h2>
+      {topRated.length === 0 ? (
+        <p className="text-sm text-gray-400">Rate some anime to see your top picks.</p>
+      ) : (
+        <>
+          <div className="flex flex-col gap-3">
+            {visible.map((e, i) => {
+              const globalIndex = page * PAGE_SIZE + i;
+              return (
+                <div key={e._id || i} className="flex items-center gap-3 min-w-0">
+                  <span className="text-base w-6 text-center flex-shrink-0">
+                    {globalIndex < 3
+                      ? MEDAL[globalIndex]
+                      : <span className="text-xs text-gray-400">{globalIndex + 1}.</span>}
+                  </span>
+                  <p className="flex-1 text-sm text-gray-700 truncate">{e.name}</p>
+                  <span className="text-sm font-bold text-[#E67E22] flex-shrink-0">&#9733; {e.rating}/10</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+              <span className="text-[10px] text-gray-400">
+                {page * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE + PAGE_SIZE, topRated.length)} of {topRated.length}
+              </span>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setPage(p => p - 1)}
+                  disabled={page === 0}
+                  className="w-6 h-6 rounded flex items-center justify-center text-gray-400
+                           hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  ▲
+                </button>
+                <button
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={page === totalPages - 1}
+                  className="w-6 h-6 rounded flex items-center justify-center text-gray-400
+                           hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  ▼
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
 const Skeleton = ({ className }) => (
   <div className={`bg-gray-200 animate-pulse rounded-xl ${className}`} />
 );
@@ -227,96 +291,50 @@ const Stats = () => {
   }, [entries, userLog]);
 
 
-  const TopRated = ({ topRated, MEDAL }) => {
 
-    const [page, setPage] = useState(0);
-    const PAGE_SIZE = 5;
-    const totalPages = Math.ceil(topRated.length / PAGE_SIZE);
-    const visible = topRated.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
-
-    return (
-      <div className="bg-white rounded-2xl shadow-sm p-5">
-        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Your Top Rated</h2>
-        {topRated.length === 0 ? (
-          <p className="text-sm text-gray-400">Rate some anime to see your top picks.</p>
-        ) : (
-          <>
-            <div className="flex flex-col gap-3">
-              {visible.map((e, i) => {
-                const globalIndex = page * PAGE_SIZE + i;
-                return (
-                  <div key={e._id || i} className="flex items-center gap-3 min-w-0">
-                    <span className="text-base w-6 text-center flex-shrink-0">
-                      {globalIndex < 3
-                        ? MEDAL[globalIndex]
-                        : <span className="text-xs text-gray-400">{globalIndex + 1}.</span>}
-                    </span>
-                    <p className="flex-1 text-sm text-gray-700 truncate">{e.name}</p>
-                    <span className="text-sm font-bold text-[#E67E22] flex-shrink-0">★ {e.rating}/10</span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-                <span className="text-[10px] text-gray-400">
-                  {page * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE + PAGE_SIZE, topRated.length)} of {topRated.length}
-                </span>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => setPage(p => p - 1)}
-                    disabled={page === 0}
-                    className="w-6 h-6 rounded flex items-center justify-center text-gray-400
-                             hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  >
-                    ▲
-                  </button>
-                  <button
-                    onClick={() => setPage(p => p + 1)}
-                    disabled={page === totalPages - 1}
-                    className="w-6 h-6 rounded flex items-center justify-center text-gray-400
-                             hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  >
-                    ▼
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    );
-  };
-
-
-  // ── Genre background queue ───────────────────────────────────────────────
-  // Uses jikanCache's built-in rate-limited queue (400 ms between uncached requests).
-  // Cached items resolve instantly; uncached ones trickle in progressively.
+  // ── Genre loading ─────────────────────────────────────────────────────────
+  // Priority: localStorage genre cache → memoryCache/sessionStorage → Jikan fetch.
+  // After the first full load, all genres are in localStorage (30-day TTL),
+  // so subsequent visits make zero Jikan requests and the chart loads instantly.
   useEffect(() => {
     if (!entries.length) return;
 
     const malIds = [...new Set(entries.filter(e => e.malId).map(e => e.malId))];
     if (!malIds.length) return;
 
-    setGenreProgress({ loaded: 0, total: malIds.length });
+    // First pass: read from caches instantly, collect what still needs a fetch
+    const accumulated = {};
+    const needsFetch = [];
 
-    // Seed with whatever is already in memory (instant, no network)
-    const seed = {};
     malIds.forEach(id => {
-      const cached = getCachedDetails(id);
-      if (cached?.genres) cached.genres.forEach(g => { seed[g.name] = (seed[g.name] || 0) + 1; });
+      // 1. localStorage genre cache (persistent, 30 days)
+      const fromLS = getCachedGenres(id);
+      if (fromLS) {
+        fromLS.forEach(name => { accumulated[name] = (accumulated[name] || 0) + 1; });
+        return;
+      }
+      // 2. sessionStorage / in-memory full detail (same session, already fetched)
+      const fromMem = getCachedDetails(id);
+      if (fromMem?.genres) {
+        fromMem.genres.forEach(g => { accumulated[g.name] = (accumulated[g.name] || 0) + 1; });
+        return;
+      }
+      needsFetch.push(id);
     });
-    if (Object.keys(seed).length) setGenres(seed);
+
+    if (Object.keys(accumulated).length) setGenres(accumulated);
+    setGenreProgress({ loaded: malIds.length - needsFetch.length, total: malIds.length });
+
+    if (!needsFetch.length) return; // everything was cached — done!
 
     let cancelled = false;
-    let loaded = 0;
+    let loaded = malIds.length - needsFetch.length; // start from already-cached count
 
-    // Async IIFE so we can use await inside useEffect
+    // Only the uncached anime go through the rate-limited Jikan queue
     (async () => {
-      for (const malId of malIds) {
-        if (cancelled) break; // cleanup on unmount
-        const details = await getAnimeDetails(malId); // rate limiting handled by jikanCache queue
+      for (const malId of needsFetch) {
+        if (cancelled) break;
+        const details = await getAnimeDetails(malId); // persistGenres() called inside jikanCache on success
         if (details?.genres) {
           setGenres(prev => {
             const next = { ...prev };

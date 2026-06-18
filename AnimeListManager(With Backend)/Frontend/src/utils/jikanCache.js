@@ -13,6 +13,11 @@
 const IMG_CACHE_KEY = "jikan_img_cache";
 const CACHE_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
+// Compact genre cache — only stores genre name strings, not full objects
+// ~100 bytes per anime vs ~3KB for full details
+const GENRE_CACHE_KEY = 'jikan_genre_cache';
+const GENRE_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
 // Full detail objects — in-memory only, but seeded from sessionStorage on startup
 // sessionStorage persists across refreshes in the same tab, clears when tab closes
 const SESSION_DETAIL_KEY = 'jikan_session_details';
@@ -93,7 +98,7 @@ const saveImageToLocalCache = (malId, data) => {
 
 const queue = [];
 let processing = false;
-const DELAY_MS = 400; // ~2.5 req/sec — stays within Jikan's 3 req/sec limit
+const DELAY_MS = 500; // ~2.5 req/sec — stays within Jikan's 3 req/sec limit
 
 const processQueue = async () => {
     if (processing || queue.length === 0) return;
@@ -127,6 +132,7 @@ const processQueue = async () => {
 
             memoryCache[malId] = data;
             saveToSessionCache(malId, data); // persist across refreshes in the same tab
+            persistGenres(malId, data.genres); // compact persistent genre cache
 
             // Image URL → compact localStorage (persistent, tiny footprint)
             const smallUrl = data?.images?.jpg?.small_image_url;
@@ -152,6 +158,35 @@ loadLocalCache();
 loadSessionCache();
 
 // ── Public API ──
+
+// Returns just the genre name strings for a mal_id if they're in localStorage cache.
+// Returns null if not cached — caller should fall back to getAnimeDetails.
+export const getCachedGenres = (malId) => {
+    try {
+        const cache = JSON.parse(localStorage.getItem(GENRE_CACHE_KEY) || '{}');
+        const entry = cache[String(malId)];
+        if (entry && Date.now() - entry.ts < GENRE_EXPIRY_MS) return entry.genres;
+    } catch {}
+    return null;
+};
+
+// Saves genre names to the compact localStorage cache.
+// Called automatically on every Jikan fetch — no need to call this manually.
+const persistGenres = (malId, genresArr) => {
+    if (!genresArr?.length) return;
+    try {
+        const cache = JSON.parse(localStorage.getItem(GENRE_CACHE_KEY) || '{}');
+        cache[String(malId)] = { genres: genresArr.map(g => g.name), ts: Date.now() };
+        localStorage.setItem(GENRE_CACHE_KEY, JSON.stringify(cache));
+    } catch {
+        try {
+            localStorage.removeItem(GENRE_CACHE_KEY);
+            localStorage.setItem(GENRE_CACHE_KEY, JSON.stringify({
+                [String(malId)]: { genres: genresArr.map(g => g.name), ts: Date.now() }
+            }));
+        } catch {}
+    }
+};
 
 // Returns the full Jikan detail object (score, synopsis, genres, images, etc.)
 // Used by AnimeDetailModal.
