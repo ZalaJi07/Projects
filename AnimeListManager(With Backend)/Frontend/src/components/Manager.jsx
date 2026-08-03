@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Navigate } from "react-router-dom";
 import ManagerHeader from "./ManagerHeader";
 import AnimeForm from "./AnimeForm";
 import AnimeTable from "./AnimeTable";
@@ -213,9 +212,6 @@ const Manager = () => {
     setPage(1); // Issue 3 fix: reset page on sort change
   };
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
 
   return (
     <div ref={scrollContainerRef} className="flex justify-center bg-[#ECF0F1] flex-grow overflow-auto">

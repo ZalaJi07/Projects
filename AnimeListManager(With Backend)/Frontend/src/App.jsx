@@ -16,6 +16,7 @@ import Profile from './pages/Profile'
 import Stats from './pages/Stats'
 import PublicStats from './pages/PublicStats'
 import { fetchMe } from './api/index.js'
+import ProtectedRoute from './components/ProtectedRoute'
 
 
 function App() {
@@ -78,14 +79,14 @@ function App() {
         <div onContextMenu={(e) => e.preventDefault()} className="flex flex-col min-h-screen md:h-screen md:overflow-hidden">
           <Navbar />
           <Routes>
-            <Route path="/" element={<Manager />} />
+            <Route path="/" element={<ProtectedRoute><Manager /></ProtectedRoute>} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/list/:username" element={<PublicList />} />
             <Route path="/list/:username/stats" element={<PublicStats />} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/calendar" element={JSON.parse(localStorage.getItem('profile')) ? <AiringCalendar /> : <Navigate to="/auth" replace />} />
-            <Route path="/profile" element={JSON.parse(localStorage.getItem('profile')) ? <Profile /> : <Navigate to="/auth" replace />} />
-            <Route path="/stats" element={JSON.parse(localStorage.getItem('profile')) ? <Stats /> : <Navigate to="/auth" replace />} />
+            <Route path="/calendar" element={<ProtectedRoute><AiringCalendar /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/stats" element={<ProtectedRoute><Stats /></ProtectedRoute>} />
           </Routes>
           <Footer />
         </div>

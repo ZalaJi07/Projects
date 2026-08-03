@@ -260,7 +260,7 @@ const Stats = () => {
     const topRated = (() => {
       const sorted = [...entries]
         .filter(e => e.rating != null)
-        .sort((a, b) => b.rating - a.rating);
+        .sort((a, b) => b.rating - a.rating || (b.episodes || 0) - (a.episodes || 0));
 
       const perfect = sorted.filter(e => e.rating === 10);
       return perfect.length >= 5 ? perfect : sorted.slice(0, 5);
