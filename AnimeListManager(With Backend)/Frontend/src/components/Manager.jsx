@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import ManagerHeader from "./ManagerHeader";
 import AnimeForm from "./AnimeForm";
 import AnimeTable from "./AnimeTable";
+import { searchAnime } from "../utils/jikanCache";
 
 import { useDispatch, shallowEqual } from "react-redux";
 import { createAnime, updateAnime } from "../actions/entry";
@@ -117,7 +118,7 @@ const Manager = () => {
     }, 400);
   };
 
-  // Jikan API search for adding anime
+  // AniList search for adding anime
   const [searchResults, setSearchResults] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const debounceRef = useRef(null);
@@ -135,30 +136,8 @@ const Manager = () => {
     }
 
     debounceRef.current = setTimeout(async () => {
-      try {
-        // Build Jikan URL: SFW + type filter based on active tab
-        let url = `https://api.jikan.moe/v4/anime?q=${searchTerm}&limit=10&sfw=true`;
-        if (activeTab === "movie") {
-          url += "&type=movie";
-        }
-
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`Error: ${response.statusText}`);
-        const data = await response.json();
-        if (data && data.data) {
-          let filteredResults = data.data;
-
-          // For series tab: exclude movies from results
-          if (activeTab === "series") {
-            filteredResults = filteredResults.filter((anime) => anime.type !== "Movie");
-          }
-
-          setSearchResults(filteredResults.slice(0, 10));
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setSearchResults([]);
-      }
+      const results = await searchAnime(searchTerm, activeTab);
+      setSearchResults(results);
     }, 400);
 
     return () => clearTimeout(debounceRef.current);

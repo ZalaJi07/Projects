@@ -50,7 +50,7 @@ const AiringCalendar = () => {
         const load = async () => {
             setLoading(true);
             setSchedule([]);
-            const data = await getSchedule(DAYS[activeDay].key);
+        const data = await getSchedule(activeDay);
             if (!cancelled) {
                 setSchedule(data);
                 setLoading(false);

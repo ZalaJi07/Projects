@@ -5,6 +5,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { getAnimeDetails, getImageUrl } from "../utils/jikanCache.js";
 import * as api from "../api/index.js";
 
+// Maps AniList format enum to a readable label
+const formatLabel = (fmt) => {
+  const map = { TV: 'TV', TV_SHORT: 'TV', ONA: 'ONA', OVA: 'OVA',
+                SPECIAL: 'Special', MOVIE: 'Movie', MUSIC: 'Music' };
+  return map[fmt] || fmt || 'Unknown';
+};
+
 // ── Delete Confirmation Modal ──
 const DeleteConfirmModal = ({ item, onConfirm, onCancel }) => {
   // Esc key closes the modal
@@ -117,24 +124,23 @@ const AnimeDetailModal = ({ anime, onClose, readOnly = false }) => {
         ) : details ? (
           <div className="flex flex-col gap-3">
             <div className="flex gap-3 sm:gap-4">
-              <img src={details.images?.jpg?.image_url} alt={anime.name} className="w-24 sm:w-28 h-36 sm:h-40 rounded-lg object-cover shadow flex-shrink-0" />
+              <img src={details.coverImage?.large || details.coverImage?.medium} alt={anime.name} className="w-24 sm:w-28 h-36 sm:h-40 rounded-lg object-cover shadow flex-shrink-0" />
               <div className="flex flex-col gap-1 text-sm">
-                <p><span className="font-semibold text-gray-600">Score:</span> ⭐ {details.score || "N/A"}</p>
-                <p><span className="font-semibold text-gray-600">Rank:</span> #{details.rank || "N/A"}</p>
-                <p><span className="font-semibold text-gray-600">Type:</span> {details.type}</p>
-                <p><span className="font-semibold text-gray-600">Episodes:</span> {details.episodes || "?"}</p>
-                <p><span className="font-semibold text-gray-600">Status:</span> {details.status}</p>
-                <p><span className="font-semibold text-gray-600">Year:</span> {details.year || "N/A"}</p>
+                <p><span className="font-semibold text-gray-600">Score:</span> ⭐ {details.meanScore ? (details.meanScore / 10).toFixed(1) : 'N/A'}</p>
+                <p><span className="font-semibold text-gray-600">Type:</span> {formatLabel(details.format)}</p>
+                <p><span className="font-semibold text-gray-600">Episodes:</span> {details.episodes || '?'}</p>
+                <p><span className="font-semibold text-gray-600">Status:</span> {details.status?.replace(/_/g, ' ')}</p>
+                <p><span className="font-semibold text-gray-600">Year:</span> {details.seasonYear || 'N/A'}</p>
               </div>
             </div>
             <div>
               <p className="font-semibold text-gray-600 mb-1">Synopsis</p>
-              <p className="text-sm text-gray-700 leading-relaxed">{details.synopsis || "No synopsis available."}</p>
+              <p className="text-sm text-gray-700 leading-relaxed">{details.synopsis || 'No synopsis available.'}</p>
             </div>
             {details.genres?.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {details.genres.map((g) => (
-                  <span key={g.mal_id} className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">{g.name}</span>
+                  <span key={g} className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">{g}</span>
                 ))}
               </div>
             )}
