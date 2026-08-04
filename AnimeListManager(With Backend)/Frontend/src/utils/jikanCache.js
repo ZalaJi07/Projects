@@ -94,11 +94,28 @@ const saveImageToLocalCache = (malId, data) => {
     }
 };
 
+// Negative cache for failed requests (504, 404, network errors)
+// Prevents retrying failing IDs repeatedly on every render
+const FAILED_CACHE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+const failedCache = {};
+
+const isFailedRecently = (malId) => {
+    const timestamp = failedCache[malId];
+    if (!timestamp) return false;
+    if (Date.now() - timestamp < FAILED_CACHE_EXPIRY_MS) return true;
+    delete failedCache[malId];
+    return false;
+};
+
+const markAsFailed = (malId) => {
+    failedCache[malId] = Date.now();
+};
+
 // ── Rate-limited request queue ──
 
 const queue = [];
 let processing = false;
-const DELAY_MS = 500; // ~2.5 req/sec — stays within Jikan's 3 req/sec limit
+const DELAY_MS = 700; // ~1.4 req/sec — stays safely under Jikan's 3 req/sec limit
 
 const processQueue = async () => {
     if (processing || queue.length === 0) return;
@@ -113,6 +130,11 @@ const processQueue = async () => {
             continue;
         }
 
+        if (isFailedRecently(malId)) {
+            resolve(null);
+            continue;
+        }
+
         try {
             const res = await fetch(`https://api.jikan.moe/v4/anime/${malId}`);
             if (res.status === 429) {
@@ -122,6 +144,7 @@ const processQueue = async () => {
                 continue;
             }
             if (!res.ok) {
+                markAsFailed(malId);
                 resolve(null);
                 await new Promise((r) => setTimeout(r, DELAY_MS));
                 continue;
@@ -142,6 +165,7 @@ const processQueue = async () => {
             resolve(data);
         } catch (error) {
             console.error("Jikan fetch error:", error);
+            markAsFailed(malId);
             resolve(null);
         }
 
@@ -193,6 +217,20 @@ const persistGenres = (malId, genresArr) => {
 export const getAnimeDetails = (malId) => {
     if (!malId) return Promise.resolve(null);
     if (memoryCache[malId]) return Promise.resolve(memoryCache[malId]);
+    if (isFailedRecently(malId)) return Promise.resolve(null);
+
+    // Deduplicate: if malId is already queued, chain the resolver to avoid duplicate fetches
+    const existing = queue.find(item => item.malId === malId);
+    if (existing) {
+        const prevResolve = existing.resolve;
+        return new Promise((resolve) => {
+            existing.resolve = (data) => {
+                prevResolve(data);
+                resolve(data);
+            };
+        });
+    }
+
     return new Promise((resolve) => {
         queue.push({ malId, resolve });
         processQueue();
@@ -209,11 +247,9 @@ export const getImageUrl = (malId) => {
     if (memoryCache[malId]) return Promise.resolve(memoryCache[malId]?.images?.jpg?.small_image_url ?? null);
     // Compact image cache (from localStorage) → instant return
     if (imageCache[malId]) return Promise.resolve(imageCache[malId]);
-    // Neither cache has it — queue a fetch, resolve with just the URL
-    return new Promise((resolve) => {
-        queue.push({ malId, resolve: (data) => resolve(data?.images?.jpg?.small_image_url ?? null) });
-        processQueue();
-    });
+    if (isFailedRecently(malId)) return Promise.resolve(null);
+
+    return getAnimeDetails(malId).then((data) => data?.images?.jpg?.small_image_url ?? null);
 };
 
 // Synchronous check — returns full details only if already in memory.
