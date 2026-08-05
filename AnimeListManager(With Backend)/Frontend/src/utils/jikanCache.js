@@ -79,11 +79,21 @@ const loadLocalCache = () => {
     } catch {}
 };
 
+const stripHtml = (str) => {
+    if (!str) return str;
+    return str.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
+};
+
 const loadSessionCache = () => {
     try {
         const raw = sessionStorage.getItem(SESSION_DETAIL_KEY);
         if (!raw) return;
-        Object.assign(memoryCache, JSON.parse(raw));
+        const parsed = JSON.parse(raw);
+        // Strip HTML from synopsis in case it was cached before the fix
+        for (const entry of Object.values(parsed)) {
+            if (entry?.synopsis) entry.synopsis = stripHtml(entry.synopsis);
+        }
+        Object.assign(memoryCache, parsed);
     } catch {}
 };
 
@@ -177,6 +187,8 @@ const processQueue = async () => {
             }
 
             const media = json.data.Media;
+            // Strip HTML tags from synopsis — AniList returns <br> even with asHtml: false
+            if (media.synopsis) media.synopsis = stripHtml(media.synopsis);
             memoryCache[malId] = media;
             saveToSessionCache(malId, media);
             persistGenres(malId, media.genres);

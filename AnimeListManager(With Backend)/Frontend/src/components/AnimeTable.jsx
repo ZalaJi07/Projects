@@ -135,7 +135,7 @@ const AnimeDetailModal = ({ anime, onClose, readOnly = false }) => {
             </div>
             <div>
               <p className="font-semibold text-gray-600 mb-1">Synopsis</p>
-              <p className="text-sm text-gray-700 leading-relaxed">{details.synopsis || 'No synopsis available.'}</p>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{details.synopsis || 'No synopsis available.'}</p>
             </div>
             {details.genres?.length > 0 && (
               <div className="flex flex-wrap gap-1">
