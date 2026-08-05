@@ -1,43 +1,29 @@
-// Browser-side cache for AniList API responses
+// Browser-side cache for MAL API responses (via backend proxy)
 //
-// AniList GraphQL API — no key required, 90 req/min limit
-// Endpoint: POST https://graphql.anilist.co
+// All external API calls go through /proxy/* on your own Express server.
+// The browser never directly contacts MAL — no CORS issues.
 //
-// localStorage (al_img_cache):
-//   Compact, persistent. Stores only { url, timestamp } per malId.
-//   Survives page reloads so table images appear instantly.
+// localStorage (mal_img_cache):
+//   Permanent — no expiry. Anime cover images never change for a given MAL ID,
+//   so once cached they are stored forever to avoid unnecessary API calls.
 //
 // memoryCache (in-process):
-//   Full AniList detail objects. Fast, no storage limit concerns.
-//   Resets on page reload — only needed for detail modals.
+//   Full detail objects. Resets on page reload — only needed for detail modals.
 
-const ANILIST_URL = 'https://graphql.anilist.co';
+const PROXY_BASE = import.meta.env.VITE_API_URL; // same base URL as your other API calls
 
-const IMG_CACHE_KEY = 'al_img_cache';
-const IMG_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
-
-const GENRE_CACHE_KEY = 'al_genre_cache';
-const GENRE_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
-
-const SESSION_DETAIL_KEY = 'al_session_details';
-
-const SCHEDULE_CACHE_KEY = 'al_schedule_v1';
-const SCHEDULE_EXPIRY_MS = 6 * 60 * 60 * 1000; // 6 hours
+const IMG_CACHE_KEY    = 'mal_img_cache';    // no expiry — images are permanent
+const GENRE_CACHE_KEY  = 'mal_genre_cache';
+const GENRE_EXPIRY_MS  = 30 * 24 * 60 * 60 * 1000; // 30 days
+const SESSION_DETAIL_KEY = 'mal_session_details';
+const SCHEDULE_CACHE_KEY = 'mal_schedule_v1';
+const SCHEDULE_EXPIRY_MS = 6 * 60 * 60 * 1000;     // 6 hours
 
 const FAILED_CACHE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
 
-const memoryCache = {};   // { [malId]: AniList media object }
-const imageCache  = {};   // { [malId]: imageUrl string }
-const failedCache = {};   // { [malId]: timestamp }
-
-// ── GraphQL query helpers ──
-
-const gql = (query, variables = {}) =>
-    fetch(ANILIST_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ query, variables }),
-    }).then(r => r.json());
+const memoryCache = {};  // { [malId]: detail object }
+const imageCache  = {};  // { [malId]: imageUrl string }
+const failedCache = {};  // { [malId]: timestamp }
 
 // ── Failure tracking ──
 
@@ -51,49 +37,33 @@ const isFailedRecently = (malId) => {
 
 const markAsFailed = (malId) => { failedCache[malId] = Date.now(); };
 
-// ── localStorage / sessionStorage helpers ──
+// ── localStorage helpers ──
 
 const loadLocalCache = () => {
     try {
-        // Remove old Jikan cache keys so they don't waste storage
-        ['jikan_cache', 'jikan_img_cache', 'jikan_genre_cache',
-         'jikan_session_details', 'jikan_schedual_cache', 'jikan_schedule_v2',
-         'jikan_schedual-v2'].forEach(k => { try { localStorage.removeItem(k); } catch {} });
+        // Clean up old Jikan/AniList cache keys
+        ['jikan_cache', 'jikan_img_cache', 'jikan_genre_cache', 'jikan_session_details',
+         'jikan_schedual_cache', 'jikan_schedule_v2', 'jikan_schedual-v2',
+         'al_img_cache', 'al_genre_cache', 'al_session_details', 'al_schedule_v1',
+        ].forEach(k => { try { localStorage.removeItem(k); } catch {} });
     } catch {}
 
     try {
+        // Load image cache — no expiry check, images are permanent
         const raw = localStorage.getItem(IMG_CACHE_KEY);
         if (!raw) return;
         const parsed = JSON.parse(raw);
-        const now = Date.now();
-        const cleaned = {};
         for (const [key, entry] of Object.entries(parsed)) {
-            if (now - entry.timestamp < IMG_EXPIRY_MS) {
-                cleaned[key] = entry;
-                imageCache[key] = entry.url;
-            }
-        }
-        if (Object.keys(cleaned).length !== Object.keys(parsed).length) {
-            localStorage.setItem(IMG_CACHE_KEY, JSON.stringify(cleaned));
+            imageCache[key] = entry.url;
         }
     } catch {}
-};
-
-const stripHtml = (str) => {
-    if (!str) return str;
-    return str.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
 };
 
 const loadSessionCache = () => {
     try {
         const raw = sessionStorage.getItem(SESSION_DETAIL_KEY);
         if (!raw) return;
-        const parsed = JSON.parse(raw);
-        // Strip HTML from synopsis in case it was cached before the fix
-        for (const entry of Object.values(parsed)) {
-            if (entry?.synopsis) entry.synopsis = stripHtml(entry.synopsis);
-        }
-        Object.assign(memoryCache, parsed);
+        Object.assign(memoryCache, JSON.parse(raw));
     } catch {}
 };
 
@@ -110,16 +80,16 @@ const saveToSessionCache = (malId, data) => {
     }
 };
 
-const saveImageToLocalCache = (malId, url) => {
+const saveImageForever = (malId, url) => {
     if (!url) return;
     try {
         const existing = JSON.parse(localStorage.getItem(IMG_CACHE_KEY) || '{}');
-        existing[malId] = { url, timestamp: Date.now() };
+        existing[malId] = { url }; // no timestamp — stored forever
         localStorage.setItem(IMG_CACHE_KEY, JSON.stringify(existing));
     } catch {
         try {
             localStorage.removeItem(IMG_CACHE_KEY);
-            localStorage.setItem(IMG_CACHE_KEY, JSON.stringify({ [malId]: { url, timestamp: Date.now() } }));
+            localStorage.setItem(IMG_CACHE_KEY, JSON.stringify({ [malId]: { url } }));
         } catch {}
     }
 };
@@ -144,27 +114,7 @@ const persistGenres = (malId, genres) => {
 
 const queue = [];
 let processing = false;
-const DELAY_MS = 700; // ~1.4 req/sec — well within AniList's 90 req/min
-
-// GraphQL query for a single anime detail by MAL ID
-const DETAIL_QUERY = `
-query ($malId: Int) {
-    Media(idMal: $malId, type: ANIME) {
-        idMal
-        title { romaji english }
-        coverImage { large medium }
-        meanScore
-        episodes
-        format
-        status
-        genres
-        synopsis: description(asHtml: false)
-        studios(isMain: true) { nodes { name } }
-        season
-        seasonYear
-        airingSchedule(notYetAired: false) { nodes { episode airingAt } }
-    }
-}`;
+const DELAY_MS = 700; // safe gap between requests
 
 const processQueue = async () => {
     if (processing || queue.length === 0) return;
@@ -177,29 +127,28 @@ const processQueue = async () => {
         if (isFailedRecently(malId)) { resolve(null); continue; }
 
         try {
-            const json = await gql(DETAIL_QUERY, { malId: Number(malId) });
-
-            if (json.errors || !json.data?.Media) {
+            const res = await fetch(`${PROXY_BASE}/proxy/anime/${malId}`);
+            if (!res.ok) {
                 markAsFailed(malId);
                 resolve(null);
                 await new Promise(r => setTimeout(r, DELAY_MS));
                 continue;
             }
 
-            const media = json.data.Media;
-            // Strip HTML tags from synopsis — AniList returns <br> even with asHtml: false
-            if (media.synopsis) media.synopsis = stripHtml(media.synopsis);
-            memoryCache[malId] = media;
-            saveToSessionCache(malId, media);
-            persistGenres(malId, media.genres);
+            const data = await res.json();
+            memoryCache[malId] = data;
+            saveToSessionCache(malId, data);
+            persistGenres(malId, data.genres);
 
-            const imgUrl = media.coverImage?.medium || media.coverImage?.large || null;
-            if (imgUrl) imageCache[malId] = imgUrl;
-            saveImageToLocalCache(malId, imgUrl);
+            const imgUrl = data.image_medium || data.image_large || null;
+            if (imgUrl) {
+                imageCache[malId] = imgUrl;
+                saveImageForever(malId, imgUrl); // permanent storage
+            }
 
-            resolve(media);
+            resolve(data);
         } catch (err) {
-            console.error('AniList fetch error:', err);
+            console.error('MAL proxy fetch error:', err);
             markAsFailed(malId);
             resolve(null);
         }
@@ -226,13 +175,13 @@ export const getCachedGenres = (malId) => {
     return null;
 };
 
-// Returns full AniList media object for a malId (detail modal, stats genres).
+// Returns full detail object for a malId (used by AnimeDetailModal).
 export const getAnimeDetails = (malId) => {
     if (!malId) return Promise.resolve(null);
     if (memoryCache[malId]) return Promise.resolve(memoryCache[malId]);
     if (isFailedRecently(malId)) return Promise.resolve(null);
 
-    // Deduplicate: chain onto existing pending request if queued
+    // Deduplicate: chain onto an existing pending request if already queued
     const existing = queue.find(item => item.malId === malId);
     if (existing) {
         const prev = existing.resolve;
@@ -251,12 +200,12 @@ export const getAnimeDetails = (malId) => {
 export const getImageUrl = (malId) => {
     if (!malId) return Promise.resolve(null);
     if (memoryCache[malId]) return Promise.resolve(
-        memoryCache[malId]?.coverImage?.medium ?? memoryCache[malId]?.coverImage?.large ?? null
+        memoryCache[malId]?.image_medium ?? memoryCache[malId]?.image_large ?? null
     );
     if (imageCache[malId]) return Promise.resolve(imageCache[malId]);
     if (isFailedRecently(malId)) return Promise.resolve(null);
     return getAnimeDetails(malId).then(
-        data => data?.coverImage?.medium ?? data?.coverImage?.large ?? null
+        data => data?.image_medium ?? data?.image_large ?? null
     );
 };
 
@@ -265,117 +214,28 @@ export const getCachedDetails = (malId) => memoryCache[malId] || null;
 
 // ── Anime Search ──
 
-const SEARCH_QUERY = `
-query ($search: String, $format: [MediaFormat], $perPage: Int) {
-    Page(page: 1, perPage: $perPage) {
-        media(search: $search, type: ANIME, format_in: $format, isAdult: false, sort: SEARCH_MATCH) {
-            idMal
-            id
-            title { romaji english }
-            coverImage { medium }
-            format
-            episodes
-            meanScore
-        }
-    }
-}`;
-
-// Searches AniList for anime by name, filtered by series or movie tab.
-// Returns array of result objects shaped to match what AnimeForm expects.
+// Searches for anime by name. Returns array shaped to match what AnimeForm expects.
 export const searchAnime = async (term, tab = 'series') => {
     if (!term || term.length < 2) return [];
-
-    // Map app tab to AniList format enum values
-    const format = tab === 'movie'
-        ? ['MOVIE']
-        : ['TV', 'TV_SHORT', 'ONA', 'OVA', 'SPECIAL'];
-
     try {
-        const json = await gql(SEARCH_QUERY, {
-            search: term.trim(),
-            format,
-            perPage: 10,
-        });
-
-        if (json.errors || !json.data?.Page?.media) return [];
-
-        return json.data.Page.media
-            .filter(m => m.idMal) // skip entries with no MAL ID
-            .map(m => ({
-                mal_id:       m.idMal,
-                title:        m.title.romaji,
-                title_english: m.title.english || m.title.romaji,
-                images: { jpg: { image_url: m.coverImage?.medium || '' } },
-                type:   formatLabel(m.format),
-                episodes: m.episodes || null,
-                score:  m.meanScore ? (m.meanScore / 10).toFixed(1) : null,
-            }));
+        const res = await fetch(
+            `${PROXY_BASE}/proxy/search?q=${encodeURIComponent(term.trim())}&tab=${tab}`
+        );
+        if (!res.ok) return [];
+        return await res.json();
     } catch (err) {
-        console.error('AniList search error:', err);
+        console.error('MAL search error:', err);
         return [];
     }
 };
 
-// Maps AniList format enum to a human-readable label
-const formatLabel = (fmt) => {
-    const map = { TV: 'TV', TV_SHORT: 'TV', ONA: 'ONA', OVA: 'OVA',
-                  SPECIAL: 'Special', MOVIE: 'Movie', MUSIC: 'Music' };
-    return map[fmt] || fmt || 'Unknown';
-};
+// ── Airing Schedule ──
 
-// ── Airing Calendar ──
-
-const SCHEDULE_QUERY = `
-query ($start: Int, $end: Int, $page: Int) {
-    Page(page: $page, perPage: 50) {
-        pageInfo { hasNextPage }
-        airingSchedules(airingAt_greater: $start, airingAt_lesser: $end, sort: TIME) {
-            media {
-                idMal
-                id
-                title { romaji english }
-                coverImage { medium }
-                meanScore
-                episodes
-                genres
-                nextAiringEpisode { airingAt episode }
-            }
-        }
-    }
-}`;
-
-// Returns start/end Unix timestamps (seconds) for a given weekday index (0=Sun)
-// relative to the current week in JST (UTC+9).
-const dayTimestamps = (dayIndex) => {
-    const now = new Date();
-    // Shift to JST
-    const jstOffset = 9 * 60;
-    const localOffset = now.getTimezoneOffset();
-    const jstNow = new Date(now.getTime() + (jstOffset + localOffset) * 60 * 1000);
-
-    // Find the Monday of this week in JST, then offset to target day
-    const currentDay = jstNow.getDay(); // 0=Sun
-    const diffToSunday = -currentDay;
-    const targetDate = new Date(jstNow);
-    targetDate.setDate(jstNow.getDate() + diffToSunday + dayIndex);
-    targetDate.setHours(0, 0, 0, 0);
-
-    const endDate = new Date(targetDate);
-    endDate.setHours(23, 59, 59, 999);
-
-    // Convert back to UTC seconds for AniList
-    const toUtcSeconds = (d) =>
-        Math.floor((d.getTime() - (jstOffset + localOffset) * 60 * 1000) / 1000);
-
-    return { start: toUtcSeconds(targetDate), end: toUtcSeconds(endDate) };
-};
-
-// Fetches one day's airing schedule from AniList with localStorage caching.
+// Returns one day's airing schedule with localStorage caching.
 // dayIndex: 0=Sunday, 1=Monday, ..., 6=Saturday (matches JS getDay())
 export const getSchedule = async (dayIndex) => {
     const cacheKey = `day_${dayIndex}`;
 
-    // Check localStorage cache first
     try {
         const raw = localStorage.getItem(SCHEDULE_CACHE_KEY);
         if (raw) {
@@ -387,38 +247,11 @@ export const getSchedule = async (dayIndex) => {
         }
     } catch {}
 
-    const { start, end } = dayTimestamps(dayIndex);
-    const seen = new Set();
-    const results = [];
-
     try {
-        // Paginate through all results for the day (AniList max 50 per page)
-        for (let page = 1; page <= 3; page++) {
-            const json = await gql(SCHEDULE_QUERY, { start, end, page });
-            if (json.errors) break;
+        const res = await fetch(`${PROXY_BASE}/proxy/schedule?day=${dayIndex}`);
+        if (!res.ok) return [];
 
-            const schedules = json.data?.Page?.airingSchedules || [];
-            for (const { media } of schedules) {
-                if (!media || !media.idMal || seen.has(media.idMal)) continue;
-                seen.add(media.idMal);
-                results.push({
-                    mal_id:        media.idMal,
-                    title:         media.title.romaji,
-                    title_english: media.title.english || media.title.romaji,
-                    image:         media.coverImage?.medium || null,
-                    score:         media.meanScore ? (media.meanScore / 10).toFixed(1) : null,
-                    episodes:      media.episodes || null,
-                    genres:        (media.genres || []).slice(0, 3),
-                    broadcast:     media.nextAiringEpisode
-                        ? `Ep ${media.nextAiringEpisode.episode}`
-                        : null,
-                });
-            }
-
-            if (!json.data?.Page?.pageInfo?.hasNextPage) break;
-            // Small delay between pagination requests
-            await new Promise(r => setTimeout(r, 300));
-        }
+        const results = await res.json();
 
         // Persist to localStorage
         try {
@@ -432,12 +265,13 @@ export const getSchedule = async (dayIndex) => {
         results.forEach(a => {
             if (a.mal_id && a.image && !imageCache[a.mal_id]) {
                 imageCache[a.mal_id] = a.image;
+                saveImageForever(a.mal_id, a.image);
             }
         });
 
         return results;
     } catch (err) {
-        console.error('AniList schedule error:', err);
+        console.error('MAL schedule error:', err);
         return [];
     }
 };

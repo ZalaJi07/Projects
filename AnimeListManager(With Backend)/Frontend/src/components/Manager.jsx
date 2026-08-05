@@ -118,7 +118,7 @@ const Manager = () => {
     }, 400);
   };
 
-  // AniList search for adding anime
+  // MAL search (via backend proxy)
   const [searchResults, setSearchResults] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const debounceRef = useRef(null);
@@ -162,7 +162,7 @@ const Manager = () => {
       // Series needs all fields
       if (!(list.name && list.status && list.episodes && list.movies)) return;
       e.preventDefault();
-      const seriesData = { ...list, entryType: "series" };
+      const seriesData = { ...list };
       if (currentId) {
         await dispatch(updateAnime(currentId, seriesData));
         setCurrentId(null);

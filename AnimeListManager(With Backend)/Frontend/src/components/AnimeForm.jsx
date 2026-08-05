@@ -44,7 +44,7 @@ const AnimeForm = forwardRef(function AnimeForm({ list, handelChange, saveAnime,
                             className="flex items-center gap-3 p-2 cursor-pointer hover:bg-[#E67E22]/10 transition-all"
                         >
                             <img
-                                src={anime.images.jpg.image_url}
+                                src={anime.image}
                                 alt={anime.title_english || anime.title}
                                 className="w-10 h-14 rounded-md object-cover shadow-sm"
                             />
